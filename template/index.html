@@ -1,0 +1,19 @@
+{%- extends 'base.html' -%}
+{%- block content -%}
+
+<h2>MetaBrainz Dataset Hoster Home</h2>
+
+<p>
+  The following data sets are available from here:
+</p>
+
+<ul>
+  {% for slug in queries %}
+    <li><a href="/{{ slug }}" style="color: #E80;">{{ slug }}</a>: {{ queries[slug].names()[1] }}</li>
+  {% endfor %}
+</ul>
+
+{% endblock%}
+
+{% block scripts %}
+{% endblock %}

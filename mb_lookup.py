@@ -1,14 +1,14 @@
-# data-set-hoster
+#!/usr/bin/env python3
+
+from datasethoster import Query
+from datasethoster.app import app, register_query
+
+from bk_tree_indexes import create_artist_credit_tree, ArtistCreditNode
+import config
+
+DEFAULT_LIMIT = 50
 
 
-Fill out a simple python object, host the results!
-
-Example
--------
-
-Create this class...
-
-```python
 class MBArtistCreditFuzzyQuery(Query):
 
     def __init__(self, db_connect_str):
@@ -39,8 +39,18 @@ class MBArtistCreditFuzzyQuery(Query):
                              'artist_credit_id': node.artist_credit_id })
 
         return results
-```
 
-and get this web page:
 
-![Demo web page](/misc/web-page.png)
+def setup():
+    print("Create artist index")
+    query = MBArtistCreditFuzzyQuery(config.DB_CONNECT_MB)
+    query.setup()
+
+    print("Starting server")
+    register_query(query)
+    app.debug = True
+    app.run(host="0.0.0.0", port=8888)
+
+
+if __name__ == "__main__":
+    setup()

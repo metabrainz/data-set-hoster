@@ -1,0 +1,4 @@
+Flask
+pybktree
+psycopg2-binary
+python-Levenshtein==0.12.0
