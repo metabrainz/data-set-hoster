@@ -1,18 +1,7 @@
-# data-set-hoster
+#!/usr/bin/env python3
 
+# pip install -e git+ssh://git@github.com/mayhem/data-set-hoster.git#egg=datasethoster
 
-Fill out a simple python object, host the results!
-
-Example
--------
-
-Install the hoster:
-
-```pip install -e git+ssh://git@github.com/mayhem/data-set-hoster.git#egg=datasethoster```
-
-Then run this program and go to http://localhost:8000 !
-
-```python
 from datasethoster import Query
 from datasethoster.app import app, register_query
 
@@ -44,8 +33,3 @@ class ExampleQuery(Query):
 if __name__ == "__main__":
     register_query(ExampleQuery())
     app.run(host="0.0.0.0", port=8000, debug=True)
-```
-
-it should look like this:
-
-![Demo web page](/misc/web-page.png)
