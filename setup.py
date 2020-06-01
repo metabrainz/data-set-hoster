@@ -8,4 +8,7 @@ setup(name='datasethoster',
       author_email='rob@metabrainz.org',
       license='CC0',
       packages=['datasethoster'],
+      install_requires=[
+          'Flask==1.1.2',
+      ],
       zip_safe=False)
