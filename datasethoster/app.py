@@ -3,13 +3,9 @@ from werkzeug.exceptions import NotFound
 
 registered_queries = {}
 
-STATIC_PATH = "/static"
-STATIC_FOLDER = "../static"
-TEMPLATE_FOLDER = "../template"
+TEMPLATE_FOLDER = "template"
 
 app = Flask(__name__,
-            static_url_path = STATIC_PATH,
-            static_folder = STATIC_FOLDER,
             template_folder = TEMPLATE_FOLDER)
 
 
