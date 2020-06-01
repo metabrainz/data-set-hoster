@@ -7,7 +7,7 @@
 <form action="/{{ slug }}">
   {% for input in inputs %}
      <label for="{{ input }}">{{ input }}</label>
-     <input type="text" id="{{ input }}" name="{{ input }}" value={{args[input] | escape }}><br>
+     <input type="text" id="{{ input }}" name="{{ input }}" value="{{args[input] | escape }}"><br>
   {% endfor %}
   <input type="submit" value="run query">
 </form>
