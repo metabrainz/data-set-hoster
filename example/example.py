@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-# pip install -e git+ssh://git@github.com/mayhem/data-set-hoster.git#egg=datasethoster
+# pip install -e git+https://github.com/mayhem/data-set-hoster.git#egg=datasethoster
 
 from datasethoster import Query
-from datasethoster.app import app, register_query
+from datasethoster.main import app, register_query
 
 class ExampleQuery(Query):
 

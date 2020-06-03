@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from werkzeug.exceptions import NotFound
 
+
+
 registered_queries = {}
 
 TEMPLATE_FOLDER = "template"
