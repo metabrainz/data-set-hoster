@@ -3,6 +3,7 @@
 
 <h2>{{ slug }}</h2>
 <h4>{{ desc }}</h4>
+<p>{{ introduction }}</p>
 
 <form action="/{{ slug }}">
   {% for input in inputs %}
@@ -25,7 +26,17 @@
       {% for row in data %}
         <tr>
           {% for column in columns %}
-            <td>{{ row[column] }}</td>
+            {% if column.endswith("recording_mbid") %}
+              <td><a href="https://musicbrainz.org/recording/{{ row[column] }}">{{ row[column] }}</a></td>
+            {% elif column.endswith("release_mbid") %}
+              <td><a href="https://musicbrainz.org/release/{{ row[column] }}">{{ row[column] }}</a></td>
+            {% elif column.endswith("release_group_mbid") %}
+              <td><a href="https://musicbrainz.org/release-group/{{ row[column] }}">{{ row[column] }}</a></td>
+            {% elif column.endswith("artist_mbid") %}
+              <td><a href="https://musicbrainz.org/artist/{{ row[column] }}">{{ row[column] }}</a></td>
+            {% else %}
+              <td>{{ row[column] }}</td>
+            {% endif %}
           {% endfor %}
         </tr>
       {% endfor %}

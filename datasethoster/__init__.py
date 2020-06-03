@@ -16,7 +16,16 @@ class Query():
         return ("", "")
 
     @abstractmethod
+    def introduction(self):
+        """ Return a text to be shown on top of the query page that acts as an intro to this query."""
+        return ("", "")
+
+    @abstractmethod
     def inputs(self):
+        return []
+
+    @abstractmethod
+    def outputs(self):
         return []
 
     @abstractmethod

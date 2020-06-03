@@ -23,6 +23,7 @@ def web_query_handler():
         raise NotFound
 
     slug, desc = query.names()
+    introduction = query.introduction()
     inputs = query.inputs()
     columns = query.outputs()
     args = {}
@@ -37,6 +38,7 @@ def web_query_handler():
                            data=data,
                            inputs=inputs,
                            columns=columns,
+                           introduction=introduction,
                            args=args,
                            desc=desc,
                            slug=slug)
