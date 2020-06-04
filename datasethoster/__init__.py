@@ -10,7 +10,7 @@ class Query():
     @abstractmethod
     def setup(self):
         """ This method is called once the class is ready to be started. Load data/indexes or
-            whatever you may need at this point. 
+            whatever you may need at this point. """
         pass
 
     @abstractmethod
