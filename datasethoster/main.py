@@ -42,7 +42,10 @@ def web_query_handler():
 
     for input in inputs:
         if input[0] == '[' and input[-1] == ']':
-            args[input] = ",".join(args[input])
+            try:
+                args[input] = ",".join(args[input])
+            except KeyError:
+                pass
 
     return render_template("query.html",
                            data=data,
