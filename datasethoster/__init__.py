@@ -25,7 +25,10 @@ class Query():
 
     @abstractmethod
     def inputs(self):
-        """ return a list of text column names that are required inputs for this query """
+        """ return a list of text column names that are required inputs for this query.
+            column names that are enclosed in [] indicates that the query expects a list,
+            rather than a simple text argument
+        """
         return []
 
     @abstractmethod

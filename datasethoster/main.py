@@ -32,6 +32,11 @@ def web_query_handler():
     try:
         for input in inputs:
             args[input] = request.args[input]
+            # Is the query expecting a list? Check the name of the argument
+            # and see if we need to parse the comma seperated arguments into a list
+            if input[0] == '[' and input[-1] == ']':
+                args[input] = args[input].split(",")
+
         data = query.fetch(args)
     except KeyError:
         data = None
@@ -64,6 +69,11 @@ def json_query_handler():
             raise NotFound("Required argument %s missing." % input)
         if not args[input]:
             raise NotFound("Required argument %s cannot be blank." % input)
+
+        # Is the query expecting a list? Check the name of the argument
+        # and see if we need to parse the comma seperated arguments into a list
+        if input[0] == '[' and input[-1] == ']':
+            args[input] = args[input].split(",")
 
 
     data = query.fetch(args)
