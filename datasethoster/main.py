@@ -36,10 +36,13 @@ def web_query_handler():
             # and see if we need to parse the comma seperated arguments into a list
             if input[0] == '[' and input[-1] == ']':
                 args[input] = args[input].split(",")
-
         data = query.fetch(args)
     except KeyError:
         data = None
+
+    for input in inputs:
+        if input[0] == '[' and input[-1] == ']':
+            args[input] = ",".join(args[input])
 
     return render_template("query.html",
                            data=data,

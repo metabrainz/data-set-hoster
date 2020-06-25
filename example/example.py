@@ -27,7 +27,8 @@ class ExampleQuery(Query):
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
-        useless = " ".join(args['[useless_list]'])
+        useless = "-".join(args['[useless_list]'])
+        print(useless)
         for i in range(1, int(args['num_lines']) + 1):
             data.append({ 'number': str(i),
                           'multiplied': str(i * int(args['number'])),

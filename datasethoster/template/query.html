@@ -2,7 +2,7 @@
 {%- block title -%}{{ slug }}{% endblock %}
 {%- block content -%}
 
-<h2>{{ slug }}</h2>
+<h2><a href="/">Dataset Hoster</a> : {{ slug }}</h2>
 <h4>{{ desc }}</h4>
 <p>{{ introduction }}</p>
 
@@ -15,6 +15,7 @@
 </form>
 
 {% if data %}
+  <p><em>{{ data | length }} rows returned</em></p>
   <table>
     <thead>
       <tr>
@@ -38,8 +39,6 @@
             {% else %}
               <td>{{ row[column] }}</td>
             {% endif %}
-          {% else %}
-             <strong>No results were returned. Boo!</strong>
           {% endfor %}
         </tr>
       {% endfor %}
