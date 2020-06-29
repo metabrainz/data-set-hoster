@@ -5,6 +5,7 @@
 <h2><a href="/">Dataset Hoster</a> : {{ slug }}</h2>
 <h4>{{ desc }}</h4>
 <p>{{ introduction }}</p>
+<p>A JSON version of this query is available at: {{ slug + "/json" }}.</p>
 
 <form action="/{{ slug }}">
   {% for input in inputs %}
