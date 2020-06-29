@@ -15,6 +15,13 @@
   <input type="submit" value="run query">
 </form>
 
+{% if error %}
+  <p>An error occurred:</p>
+  <div>
+    <pre>{{ error }} </pre>
+  </div>
+{% endif %}
+
 {% if data %}
   <p><em>{{ data | length }} rows returned</em></p>
   <table>

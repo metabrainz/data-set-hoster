@@ -1,5 +1,7 @@
+import traceback
+
 from flask import Flask, render_template, request, jsonify
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, InternalServerError
 
 
 
@@ -29,6 +31,8 @@ def web_query_handler():
     inputs = query.inputs()
     columns = query.outputs()
     args = {}
+    data = None
+    error = None
     try:
         for input in inputs:
             args[input] = request.args[input]
@@ -36,9 +40,15 @@ def web_query_handler():
             # and see if we need to parse the comma seperated arguments into a list
             if input[0] == '[' and input[-1] == ']':
                 args[input] = args[input].split(",")
-        data = query.fetch(args)
+
+        try:
+            data = query.fetch(args)
+        except Exception as err:
+            data = None
+            error = traceback.format_exc()
+
     except KeyError:
-        data = None
+        pass
 
     for input in inputs:
         if input[0] == '[' and input[-1] == ']':
@@ -48,6 +58,7 @@ def web_query_handler():
                 pass
 
     return render_template("query.html",
+                           error=error,
                            data=data,
                            inputs=inputs,
                            columns=columns,
@@ -81,8 +92,12 @@ def json_query_handler():
         if input[0] == '[' and input[-1] == ']':
             args[input] = args[input].split(",")
 
-
-    data = query.fetch(args)
+    try:
+        data = query.fetch(args)
+    except Exception as err:
+        print(err)
+        return jsonify({}), 500
+        
     return jsonify(data)
 
 
