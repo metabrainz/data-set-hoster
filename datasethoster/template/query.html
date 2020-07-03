@@ -36,13 +36,13 @@
       {% for row in data %}
         <tr>
           {% for column in columns %}
-            {% if column.endswith("recording_mbid") %}
+            {% if column.endswith("recording_mbid") or column.endswith("recording_id")  %}
               <td><a href="https://musicbrainz.org/recording/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("release_mbid") %}
+            {% elif column.endswith("release_mbid") or column.endswith("release_id")  %}
               <td><a href="https://musicbrainz.org/release/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("release_group_mbid") %}
+            {% elif column.endswith("release_group_mbid") or column.endswith("release_group_id") %}
               <td><a href="https://musicbrainz.org/release-group/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("artist_mbid") %}
+            {% elif column.endswith("artist_mbid") or column.endswith("artist_id") %}
               <td><a href="https://musicbrainz.org/artist/{{ row[column] }}">{{ row[column] }}</a></td>
             {% else %}
               <td>{{ row[column] }}</td>
