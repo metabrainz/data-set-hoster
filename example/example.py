@@ -23,7 +23,7 @@ class ExampleQuery(Query):
         return ['number', 'num_lines', '[useless_list]']
 
     def outputs(self):
-        return ['number', 'multiplied', "recording_mbid", "useless"]
+        return ['number', 'multiplied', "recording_mbid", "useless", "list"]
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
@@ -32,7 +32,8 @@ class ExampleQuery(Query):
             data.append({ 'number': str(i),
                           'multiplied': str(i * int(args['number'])),
                           'recording_mbid' : '1234a7ae-2af2-4291-aa84-bd0bafe291a1',
-                          'useless': useless})
+                          'useless': useless,
+                          'list' : [1,2,3]})
 
         return data
 

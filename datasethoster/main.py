@@ -57,6 +57,7 @@ def web_query_handler():
             except KeyError:
                 pass
 
+    json_url = request.url.replace(slug, slug + "/json")
     return render_template("query.html",
                            error=error,
                            data=data,
@@ -65,7 +66,8 @@ def web_query_handler():
                            introduction=introduction,
                            args=args,
                            desc=desc,
-                           slug=slug)
+                           slug=slug,
+                           json_url=json_url)
 
 
 def json_query_handler():

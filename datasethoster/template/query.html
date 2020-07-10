@@ -4,8 +4,10 @@
 
 <h2><a href="/">Dataset Hoster</a> : {{ slug }}</h2>
 <h4>{{ desc }}</h4>
-<p>{{ introduction }}</p>
-<p>A JSON version of this query is available at: {{ slug + "/json" }}.</p>
+<p>
+   {{ introduction }}
+   (<a href="{{ json_url }}>">JSON version</a>)
+</p>
 
 <form action="/{{ slug }}">
   {% for input in inputs %}
@@ -44,8 +46,14 @@
               <td><a href="https://musicbrainz.org/release-group/{{ row[column] }}">{{ row[column] }}</a></td>
             {% elif column.endswith("artist_mbid") or column.endswith("artist_id") or column.endswith("artist_credit_id") %}
               <td><a href="https://musicbrainz.org/artist/{{ row[column] }}">{{ row[column] }}</a></td>
+            {% elif row[column] is iterable  %} 
+              <td>
+                {% for v in row[column] %}
+                    {{ v }}
+                {% endfor %}
+              </td>
             {% else %}
-              <td>{{ row[column] }}</td>
+              <td>{{ type(row[column]) }} {{ row[column] }}</td>
             {% endif %}
           {% endfor %}
         </tr>
