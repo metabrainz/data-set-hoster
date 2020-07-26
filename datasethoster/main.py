@@ -68,11 +68,13 @@ def web_query_handler():
     arg_list = convert_http_args_to_json(inputs, request.args)
     error_check_arguments(inputs, arg_list)
 
+    error = ""
     try:
         data = query.fetch(arg_list)
     except Exception as err:
-        data = None
+        data = []
         error = traceback.format_exc()
+        print(error)
 
     for i, arg in enumerate(data):
         for output in outputs:
