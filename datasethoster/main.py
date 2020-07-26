@@ -86,7 +86,7 @@ def web_query_handler():
 
     json_url = request.url.replace(slug, slug + "/json")
     return render_template("query.html",
-                           error="",
+                           error=error,
                            data=data,
                            inputs=inputs,
                            columns=outputs,
