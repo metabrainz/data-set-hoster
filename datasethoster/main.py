@@ -70,7 +70,7 @@ def web_query_handler():
 
     error = ""
     try:
-        data = query.fetch(arg_list)
+        data = query.fetch(arg_list) if arg_list else []
     except Exception as err:
         data = []
         error = traceback.format_exc()
@@ -118,7 +118,7 @@ def json_query_handler_get():
     error_check_arguments(inputs, arg_list)
 
     try:
-        data = query.fetch(arg_list)
+        data = query.fetch(arg_list) if arg_list else []
     except Exception as err:
         print(traceback.format_exc())
         return jsonify({}), 500
@@ -138,7 +138,7 @@ def json_query_handler_post():
     error_check_arguments(inputs, request.json)
 
     try:
-        data = query.fetch(request.json)
+        data = query.fetch(request.json) if request.json else []
     except Exception as err:
         print(traceback.format_exc())
         return jsonify({}), 500
