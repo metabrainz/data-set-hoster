@@ -27,13 +27,13 @@ class ExampleQuery(Query):
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
-        useless = "-".join(args['[useless_list]'])
-        for i in range(1, int(args['num_lines']) + 1):
-            data.append({ 'number': str(i),
-                          'multiplied': str(i * int(args['number'])),
-                          'recording_mbid' : '1234a7ae-2af2-4291-aa84-bd0bafe291a1',
-                          'useless': useless,
-                          'list' : [1,2,3]})
+        for arg in args:
+            for i in range(int(arg['num_lines'])):
+                data.append({ 'number': str(i),
+                              'multiplied': str(i * int(arg['number'])),
+                              'recording_mbid' : '1234a7ae-2af2-4291-aa84-bd0bafe291a1',
+                              'useless': "-".join(arg['[useless_list]']),
+                              'list' : [1,2,3]})
 
         return data
 
