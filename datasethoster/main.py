@@ -3,8 +3,7 @@ import copy
 import traceback
 
 from flask import Flask, render_template, request, jsonify
-from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
-
+from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, MethodNotAllowed
 
 
 registered_queries = {}
@@ -17,105 +16,113 @@ app = Flask(__name__,
 
 @app.route('/')
 def index():
-
     return render_template("index.html", queries=registered_queries)
 
 
-def web_query_handler():
-    slug = request.path[1:]
-    try:
-        query = registered_queries[slug]
-    except KeyError:
-        raise NotFound
-
-    slug, desc = query.names()
-    introduction = query.introduction()
-    inputs = query.inputs()
-    columns = query.outputs()
-    args = {}
-    data = None
-    error = None
-    try:
-        for input in inputs:
-            args[input] = request.args[input]
-            # Is the query expecting a list? Check the name of the argument
-            # and see if we need to parse the comma seperated arguments into a list
-            if input[0] == '[' and input[-1] == ']':
-                args[input] = args[input].split(",")
-
-        print(args)
-        try:
-            data = query.fetch(args)
-        except Exception as err:
-            data = None
-            error = traceback.format_exc()
-
-    except KeyError:
-        pass
-
-    for input in inputs:
-        if input[0] == '[' and input[-1] == ']':
-            try:
-                args[input] = ",".join(args[input])
-            except KeyError:
-                pass
-
-    json_url = request.url.replace(slug, slug + "/json")
-    return render_template("query.html",
-                           error=error,
-                           data=data,
-                           inputs=inputs,
-                           columns=columns,
-                           introduction=introduction,
-                           args=args,
-                           desc=desc,
-                           slug=slug,
-                           json_url=json_url)
-
-
-def json_query_handler_get():
-    if request.method == 'POST':
-        return json_query_handler_post()
-
-    slug, _ = request.path[1:].split("/")
-    try:
-        query = registered_queries[slug]
-    except KeyError:
-        raise NotFound
-
-    slug, desc = query.names()
-    inputs = query.inputs()
-    columns = query.outputs()
-    args = {}
-    for input in inputs:
-        try:
-            args[input] = request.args[input]
-        except KeyError:
-            raise BadRequest("Required argument %s missing." % input)
-        if not args[input]:
-            raise BadRequest("Required argument %s cannot be blank." % input)
-
-        # Is the query expecting a list? Check the name of the argument
-        # and see if we need to parse the comma seperated arguments into a list
-        if input[0] == '[' and input[-1] == ']':
-            args[input] = args[input].split(",")
-
-    try:
-        data = query.fetch(args)
-    except Exception as err:
-        print(traceback.format_exc())
-        return jsonify({}), 500
-        
-    return jsonify(data)
-
 def fetch_query(url):
-    slug, _ = url[1:].split("/")
+    parts = url[1:].split("/")
+    slug = parts[0]
     try:
         query = registered_queries[slug]
     except KeyError:
         raise NotFound
 
     return query
+
+
+def convert_http_args_to_json(inputs, req_args):
+
+    args = {}
+    num_args = 0
+    for arg in req_args:
+        args[arg] = req_args[arg].split(",")
+        num_args = len(args[arg])
+
+    arg_list = []
+    for i in range(num_args):
+        row = {}
+        for input in inputs:
+            row[input] = args[input][i]
+        arg_list.append(row)
+
+    return arg_list
+
+
+def error_check_arguments(inputs, req_json):
+
+    for i, row in enumerate(req_json):
+        for input in inputs:
+            if not input in row:
+                raise BadRequest("Required argument %s missing in row %d." % (input, i))
+            if not row[input]:
+                raise BadRequest("Required argument %s cannot be blank." % (input, i))
+
+def web_query_handler():
+
+    query = fetch_query(request.path)
+    slug, desc = query.names()
+    introduction = query.introduction()
+    inputs = query.inputs()
+    outputs = query.outputs()
+
+    arg_list = convert_http_args_to_json(inputs, request.args)
+    error_check_arguments(inputs, arg_list)
+
+    try:
+        data = query.fetch(arg_list)
+    except Exception as err:
+        data = None
+        error = traceback.format_exc()
+
+    for i, arg in enumerate(data):
+        for output in outputs:
+            if output[0] == '[' and output[-1] == ']':
+                try:
+                    arg[output] = ",".join(arg[output])
+                except KeyError:
+                    pass
+
+    json_url = request.url.replace(slug, slug + "/json")
+    return render_template("query.html",
+                           error="",
+                           data=data,
+                           inputs=inputs,
+                           columns=outputs,
+                           introduction=introduction,
+                           args=request.args,
+                           desc=desc,
+                           slug=slug,
+                           json_url=json_url)
+
+
+def json_query_handler():
+    if request.method == 'GET':
+        return json_query_handler_get()
+
+    if request.method == 'POST':
+        return json_query_handler_post()
+
+    raise MethodNotAllowed
+
+
+def json_query_handler_get():
+
+    query = fetch_query(request.path)
+    slug, desc = query.names()
+    inputs = query.inputs()
+    columns = query.outputs()
+
+    arg_list = convert_http_args_to_json(inputs, request.args)
+    error_check_arguments(inputs, arg_list)
+
+    try:
+        data = query.fetch(arg_list)
+    except Exception as err:
+        print(traceback.format_exc())
+        return jsonify({}), 500
+        
+    return jsonify(data)
+
 
 def json_query_handler_post():
 
@@ -126,16 +133,7 @@ def json_query_handler_post():
     inputs = query.inputs()
     outputs = query.outputs()
 
-    args = copy.deepcopy(request.json)
-    for i, row in enumerate(request.json):
-        for input in inputs:
-            if not input in row:
-                raise BadRequest("Required argument %s missing in row %d." % (input, i))
-            if not row[input]:
-                raise BadRequest("Required argument %s cannot be blank." % (input, i))
-
-            if input[0] == '[' and input[-1] == ']':
-                args[i][input] = row[input].split(",")
+    error_check_arguments(inputs, request.json)
 
     try:
         data = query.fetch(request.json)
@@ -150,4 +148,4 @@ def register_query(query):
     slug, name = query.names()
     registered_queries[slug] = query
     app.add_url_rule('/%s' % slug, slug, web_query_handler)
-    app.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler_get, methods=['GET', 'POST'])
+    app.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST'])

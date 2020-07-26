@@ -20,10 +20,10 @@ class ExampleQuery(Query):
         return """This is the introduction, which could provide more useful info that this introduction does."""
 
     def inputs(self):
-        return ['number', 'num_lines', '[useless_list]']
+        return ['number', 'num_lines']
 
     def outputs(self):
-        return ['number', 'multiplied', "recording_mbid", "useless", "list"]
+        return ['number', 'multiplied', "[list]"]
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
@@ -31,9 +31,7 @@ class ExampleQuery(Query):
             for i in range(int(arg['num_lines'])):
                 data.append({ 'number': str(i),
                               'multiplied': str(i * int(arg['number'])),
-                              'recording_mbid' : '1234a7ae-2af2-4291-aa84-bd0bafe291a1',
-                              'useless': "-".join(arg['[useless_list]']),
-                              'list' : [1,2,3]})
+                              '[list]' : [str(i), arg['number']]})
 
         return data
 
