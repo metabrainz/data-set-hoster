@@ -25,7 +25,7 @@
 {% endif %}
 
 {% if count >= 0 %}
-    <p><em>{{ count }} rows returned</em></p>
+    <p><b>{{ count }} rows returned</b></p>
 {% endif %}
 
 {% if data %}
@@ -64,9 +64,11 @@
     </tbody>
   </table>
   {% if json_post %}
-     <p>JSON POST data for this query:</p>
-     <div id="json-post">
-        <pre>{{ json_post }}</pre>
+     <div style="padding-top: 3em">
+       <small>JSON POST data for this query:</small>
+       <div id="json-post">
+          <pre style="background-color: #FFF">{{ json_post }}</pre>
+       </div>
      </div>
   {% endif %}
 {% endif %}
