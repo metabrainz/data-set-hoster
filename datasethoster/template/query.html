@@ -6,7 +6,7 @@
 <h4>{{ desc }}</h4>
 <p>
    {{ introduction }}
-   (<a href="{{ json_url }}">JSON version</a>)
+   (<a href="{{ json_url }}">JSON version</a> {% if json_post %}and <a href="#json-post">JSON POST data</a>{% endif %})
 </p>
 
 <form action="/{{ slug }}">
@@ -24,8 +24,11 @@
   </div>
 {% endif %}
 
+{% if count >= 0 %}
+    <p><em>{{ count }} rows returned</em></p>
+{% endif %}
+
 {% if data %}
-  <p><em>{{ data | length }} rows returned</em></p>
   <table>
     <thead>
       <tr>
@@ -60,6 +63,12 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if json_post %}
+     <p>JSON POST data for this query:</p>
+     <div id="json-post">
+        <pre>{{ json_post }}</pre>
+     </div>
+  {% endif %}
 {% endif %}
 
 {% endblock%}

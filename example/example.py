@@ -20,7 +20,7 @@ class ExampleQuery(Query):
         return """This is the introduction, which could provide more useful info that this introduction does."""
 
     def inputs(self):
-        return ['number', 'num_lines']
+        return ['number', 'num_lines', '[list 0]', '[list 1]']
 
     def outputs(self):
         return ['number', 'multiplied', "[list]"]
@@ -31,7 +31,8 @@ class ExampleQuery(Query):
             for i in range(int(arg['num_lines'])):
                 data.append({ 'number': str(i),
                               'multiplied': str(i * int(arg['number'])),
-                              '[list]' : [str(i), arg['number']]})
+                              '[list]': [arg['[list 0]'], arg['[list 1]']]
+                            })
 
         return data
 
