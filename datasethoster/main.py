@@ -84,7 +84,6 @@ def web_query_handler():
         error_check_arguments(inputs, arg_list)
         if arg_list:
             json_post = json.dumps(arg_list, indent=4, sort_keys=True)
-        print("json_post '%s'" % json_post)
 
         try:
             data = query.fetch(arg_list) if arg_list else []
