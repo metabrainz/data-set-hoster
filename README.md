@@ -12,24 +12,26 @@ Install the hoster, ideally in a virtual env:
 Then run this program and go to http://localhost:8000 !
 
 ```python
-from datasethoster import Query
-from datasethoster.app import app, register_query
-
-class ExampleQuery(Query):
-
     def names(self):
         return ("example", "Useless arithmetic table example")
 
+    def introduction(self):
+        return """This is the introduction, which could provide more useful info that this introduction does."""
+
     def inputs(self):
-        return ['number', 'num_lines']
+        return ['number', 'num_lines', '[list 0]', '[list 1]']
 
     def outputs(self):
-        return ['number', 'multiplied']
+        return ['number', 'multiplied', "[list]"]
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
-        for i in range(1, int(args['num_lines']) + 1):
-            data.append({ 'number': str(i), 'multiplied': str(i * int(args['number']))})
+        for arg in args:
+            for i in range(int(arg['num_lines'])):
+                data.append({ 'number': str(i),
+                              'multiplied': str(i * int(arg['number'])),
+                              '[list]': [arg['[list 0]'], arg['[list 1]']]
+                            })
 
         return data
 
@@ -40,7 +42,9 @@ if __name__ == "__main__":
 ```
 
 The base Query class is in datasethoster/__init__.py -- take a look at it to see
-what options there are and how to override them.
+what options there are and how to override them. The parameters names are important;
+a parameter in [] indicates that this parameter expect to be a list, not a simple
+value.
 
 The resulting web page should look something like this:
 

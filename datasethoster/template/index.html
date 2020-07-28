@@ -5,6 +5,14 @@
 <h2>MetaBrainz Dataset Hoster Home</h2>
 
 <p>
+  You can use this data set hoster to explore the various data sets that are being 
+  exposed through this interface. The goal of this interface is to make the
+  discovery of hosted data quick and intuitive - ideally the interface should
+  give you all of the information necessary in order start using one of these
+  APIs in your project quickly.
+<p>
+
+<p>
   The following data sets are available from here:
 </p>
 
@@ -13,6 +21,12 @@
     <li><a href="/{{ slug }}" style="color: #E80;">{{ slug }}</a>: {{ queries[slug].names()[1] }}</li>
   {% endfor %}
 </ul>
+
+<p>
+   Use the web interface for each of these endpoints to discover what parameters to send
+   and what results to expect. Then take the JSON GET or POST example data to integrate
+   these calls into your projects.
+<p>
 
 {% endblock%}
 
