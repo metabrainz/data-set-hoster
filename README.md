@@ -76,6 +76,11 @@ derived from the Query object and override the following functions:
          return a list of dicts with keys named exactly after each of the
          outputs.
 
+Once a query object has been defined, it needs to be registered by calling
+register_query, passing an instance of the object.
+
+Example
+-------
 
 The resulting web page should look something like this:
 
@@ -89,8 +94,8 @@ Use the Dockerfile in examples as a template and follow the instructions on how 
 the template for your own use. Then build and start the container:
 
 ```
-docker build -t mayhem/datasethoster .
-docker run -d -p 80:80 mayhem/datasethoster
+docker build -t metabrainz/datasethoster .
+docker run -d -p 80:80 metabrainz/datasethoster
 ```
 
 If you need to connect to another container, you should probably connect the new container 
@@ -98,5 +103,5 @@ to the existing network. To connect to an instance of musicbrainz-docker, using 
 invocation for testing is:
 
 ```
-docker run -it --rm --name datasethoster-test --network musicbrainzdocker_default -p 4200:80 mayhem/datasethoster
+docker run -it --rm --name datasethoster-test --network musicbrainzdocker_default -p 4200:80 metabrainz/datasethoster
 ```
