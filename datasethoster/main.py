@@ -4,7 +4,8 @@ import traceback
 import json
 
 from flask import Flask, render_template, request, jsonify
-from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, MethodNotAllowed, ImATeapot
+from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
+                                MethodNotAllowed, ImATeapot, ServiceUnavailable
 
 
 registered_queries = {}
