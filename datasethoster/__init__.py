@@ -21,7 +21,7 @@ class Query():
     @abstractmethod
     def introduction(self):
         """ Return a text to be shown on top of the query page that acts as an intro to this query."""
-        return ("", "")
+        return ""
 
     @abstractmethod
     def inputs(self):
@@ -38,6 +38,13 @@ class Query():
 
     @abstractmethod
     def fetch(self, params, offset=-1, limit=-1):
-        """ return a list of rows of columns of data to be shown in the page. """
+        """
+           Given the passed in parameters, the function should carry out more error checking
+           on the arguments and then fetch the data needed. This function should
+           return a list of dicts with keys named exactly after each of the
+           outputs. This function should use the Werkzeug exceptions like NotFound, BadRequest
+           if anything goes wrong in the process of fetching the data. For the web interface
+           BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound are caught
+           and the text is correctly displayed as an error on the web page.
+        """
         return []
-

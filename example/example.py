@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 
-# pip install -e git+https://github.com/mayhem/data-set-hoster.git#egg=datasethoster
-
 from datasethoster import Query
 from datasethoster.main import app, register_query
 
 class ExampleQuery(Query):
-
-    def __init__(self):
-        pass
-
-    def setup(self):
-        pass
 
     def names(self):
         return ("example", "Useless arithmetic table example")
@@ -20,18 +12,17 @@ class ExampleQuery(Query):
         return """This is the introduction, which could provide more useful info that this introduction does."""
 
     def inputs(self):
-        return ['number', 'num_lines', '[list 0]', '[list 1]']
+        return ['number', 'num_lines']
 
     def outputs(self):
-        return ['number', 'multiplied', "[list]"]
+        return ['number', 'multiplied']
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
         for arg in args:
             for i in range(int(arg['num_lines'])):
                 data.append({ 'number': str(i),
-                              'multiplied': str(i * int(arg['number'])),
-                              '[list]': [arg['[list 0]'], arg['[list 1]']]
+                              'multiplied': str(i * int(arg['number']))
                             })
 
         return data

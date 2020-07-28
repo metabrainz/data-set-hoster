@@ -4,7 +4,7 @@ import traceback
 import json
 
 from flask import Flask, render_template, request, jsonify
-from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, MethodNotAllowed
+from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, MethodNotAllowed, ImATeapot
 
 
 registered_queries = {}
@@ -137,6 +137,8 @@ def web_query_handler():
 
                 try:
                     data = query.fetch(arg_list) if arg_list else []
+                except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
+                    error = err
                 except Exception as err:
                     error = traceback.format_exc()
                     print(error)
