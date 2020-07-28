@@ -11,9 +11,13 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
 registered_queries = {}
 
 TEMPLATE_FOLDER = "template"
+def create_app(is_testing=False):
+    app = Flask(__name__, template_folder = TEMPLATE_FOLDER)
+    app.config['TESTING'] = True
+    return app
 
-app = Flask(__name__,
-            template_folder = TEMPLATE_FOLDER)
+app = create_app()
+
 
 def register_query(query):
     """
@@ -104,7 +108,7 @@ def error_check_arguments(inputs, req_json):
             if not input in row:
                 return "Required parameter '%s' missing in row %d." % (input, i)
             if not row[input]:
-                return "Required parameter '%s' cannot be blank." % (input, i)
+                return "Required parameter '%s' cannot be blank in row %d." % (input, i)
 
     # Examine one row to ensure that all the parameters are there.
     for req in req_json[0]:
