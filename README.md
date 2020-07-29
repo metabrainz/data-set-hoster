@@ -32,7 +32,7 @@ class ExampleQuery(Query):
         return ['number', 'num_lines']
 
     def outputs(self):
-        return ['number', 'multiplied'"]
+        return ['number', 'multiplied']
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
