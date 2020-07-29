@@ -72,7 +72,7 @@ The example above can be fetched using this URL:
 
 and the JSON returned will be:
 
-``` [
+```[
 
     {
         "multiplied": "0",
@@ -83,7 +83,8 @@ and the JSON returned will be:
         "number": "1"
     }
 
-]```
+]
+```
 
 However, we do not recommend using this endpoint for more than testing,
 since the arguments for the GET call can make the URL quite long, which can
