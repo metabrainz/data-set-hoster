@@ -2,3 +2,6 @@ __pycache__
 config.py
 .ve
 datasethoster.egg-info
+.coverage
+*,cover
+htmlcov

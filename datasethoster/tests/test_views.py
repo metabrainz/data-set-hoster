@@ -61,6 +61,10 @@ class MainTestCase(flask_testing.TestCase):
         resp = self.client.get(url_for('index'))
         self.assert200(resp)
 
+    def test_nonexistant_page(self):
+        resp = self.client.get("bad")
+        self.assert404(resp)
+
     def test_empty_query_page(self):
         q = SampleQuery()
         register_query(q)
@@ -73,6 +77,13 @@ class MainTestCase(flask_testing.TestCase):
 
         resp = self.client.post(url_for('test_json'), json=[])
         self.assert400(resp)
+
+    def test_web_get(self):
+        q = SampleQuery()
+        register_query(q)
+        params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
+        resp = self.client.get(url_for('test', **params))
+        self.assert200(resp)
 
     def test_json_post(self):
         q = SampleQuery()

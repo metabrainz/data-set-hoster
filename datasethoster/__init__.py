@@ -16,12 +16,12 @@ class Query():
     @abstractmethod
     def names(self):
         """ Return a short name (slug) and a more descriptive name """
-        return ("", "")
+        pass
 
     @abstractmethod
     def introduction(self):
         """ Return a text to be shown on top of the query page that acts as an intro to this query."""
-        return ""
+        pass
 
     @abstractmethod
     def inputs(self):
@@ -29,12 +29,12 @@ class Query():
             column names that are enclosed in [] indicates that the query expects a list,
             rather than a simple text argument
         """
-        return []
+        pass
 
     @abstractmethod
     def outputs(self):
         """ return a list of text column names that will be returned by the fetch function """
-        return []
+        pass
 
     @abstractmethod
     def fetch(self, params, offset=-1, limit=-1):
@@ -47,4 +47,4 @@ class Query():
            BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound are caught
            and the text is correctly displayed as an error on the web page.
         """
-        return []
+        pass

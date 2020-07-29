@@ -21,6 +21,7 @@ def register_query(query):
         providing a completed Query object that gives all the relevant information about the query.
     """
 
+    query.setup()
     slug, name = query.names()
     registered_queries[slug] = query
     app.add_url_rule('/%s' % slug, slug, web_query_handler)
@@ -221,12 +222,10 @@ def json_query_handler_post():
     """
 
     if not isinstance(request.json, list):
-        print("no list")
         raise BadRequest("POST data must be a JSON list of hashes.")
 
     query, error = fetch_query(request.path)
     if error:
-        print(error)
         raise BadRequest(error)
 
     inputs = query.inputs()
