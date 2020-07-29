@@ -72,7 +72,8 @@ The example above can be fetched using this URL:
 
 and the JSON returned will be:
 
-```[
+```
+[
 
     {
         "multiplied": "0",
@@ -112,7 +113,8 @@ to this URL:
 
 and the JSON returned will be:
 
-```[
+```
+[
 
     {
         "multiplied": "0",
