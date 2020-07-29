@@ -112,7 +112,7 @@ to this URL:
 
 and the JSON returned will be:
 
-``` [
+```[
 
     {
         "multiplied": "0",
@@ -123,7 +123,8 @@ and the JSON returned will be:
         "number": "1"
     }
 
-]```
+]
+```
 
 #### Pagination
 
