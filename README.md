@@ -59,6 +59,79 @@ The resulting web page should look something like this:
 
 There is a fully functioning example in the example directory.
 
+Example using JSON
+------------------
+
+This project also provides two other endpoints other than the web endpoint:
+
+### GET JSON endpoint
+
+The example above can be fetched using this URL:
+
+```http://localhost:8000/example/json?number=1&num_lines=2```
+
+and the JSON returned will be:
+
+``` [
+
+    {
+        "multiplied": "0",
+        "number": "0"
+    },
+    {
+        "multiplied": "1",
+        "number": "1"
+    }
+
+]```
+
+However, we do not recommend using this endpoint for more than testing,
+since the arguments for the GET call can make the URL quite long, which can
+give problems with proxies that don't support long enough URLs.
+
+It is best to use the POST JSON endpoint.
+
+
+### POST JSON endpoint
+
+The example above can be fetched by posting the following JSON
+
+```
+[
+    {
+        "num_lines": "2",
+        "number": "1"
+    }
+]
+```
+
+to this URL:
+
+```http://localhost:8000/example/json```
+
+and the JSON returned will be:
+
+``` [
+
+    {
+        "multiplied": "0",
+        "number": "0"
+    },
+    {
+        "multiplied": "1",
+        "number": "1"
+    }
+
+]```
+
+#### Pagination
+
+The JSON POST endpoint (and only it) support pagination. You can add the ```count``` 
+and ```offset``` parameters to the URL to control the number and offset
+of items returned:
+
+```http://localhost:8000/example/json?count=3&offset=2```
+
 
 Hosting your own data sets
 --------------------------
