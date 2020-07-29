@@ -50,17 +50,27 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
 ```
 
+Example
+-------
+
+The resulting web page should look something like this:
+
+![Demo web page](/misc/web-page.png)
+
+There is a fully functioning example in the example directory.
+
+
 Hosting your own data sets
 --------------------------
 
 To host your own data, install the libary as shown above. Then create an object
 derived from the Query object and override the following functions:
 
-* names: Return a tuple of the slug (short name) x`and descrptions  of this data set. 
+* names: Return a tuple of the slug (short name) and descrption of this data set. 
          The name should be a simple identifier that provides the dataset a unique 
          location. We recommend using nothing but alphanumeric characters and -.
          The description should give short a human readable description of what your
-         data set.
+         data set does.
 * introduction: Return a longer description of what the data set is and why your
                 user might want to use it.
 * inputs: Return a list of required input names. These should be identifiers as well
@@ -74,17 +84,18 @@ derived from the Query object and override the following functions:
          passed in parameters, the function should carry out more error checking
          on the arguments and then fetch the data needed. This function should
          return a list of dicts with keys named exactly after each of the
-         outputs.
+         outputs. For the POST method endpoint the arguments count and
+         offset may be provided -- for the web view and GET JSON views, offset
+         and count are not handled.
 
 Once a query object has been defined, it needs to be registered by calling
-register_query, passing an instance of the object.
+register_query, passing an instance of the object. Finally you'll need to 
+run the app -- the example code shows how to run the app in the development mode.
+Please note: Do not use this mode for production -- instead use a proper UWSGI 
+container.
 
-Example
--------
-
-The resulting web page should look something like this:
-
-![Demo web page](/misc/web-page.png)
+If you use Docker, there is a Dockerfile provided in the example directory that
+will host this project correctly. See below for more details.
 
 
 Hosting in Docker with nginx/uwsgi/flask
