@@ -5,4 +5,3 @@ This project is intended to be simple and easy, but a few things will likely nee
 
 * Rate limiting
 * API keys
-* Finish pagination support

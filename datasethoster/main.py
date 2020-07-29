@@ -7,11 +7,10 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
-
-registered_queries = {}
-
+DEFAULT_QUERY_RESULT_SIZE = 100
 TEMPLATE_FOLDER = "template"
 
+registered_queries = {}
 app = Flask(__name__,
             template_folder = TEMPLATE_FOLDER)
 
@@ -32,6 +31,11 @@ def register_query(query):
 def index():
     """ The home page that shows all of the available queries."""
     return render_template("index.html", queries=registered_queries)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html', error="Query not found."), 404
 
 
 def fetch_query(url):
@@ -121,37 +125,47 @@ def web_query_handler():
         the guff shown on the web page to make it easy to discover these data sets.
     """
 
+    offset = int(request.args.get('offset', "-1"))
+    count = int(request.args.get('count', "-1"))
+    if offset >= 0 or count >= 0:
+        return render_template("error.html", error="offset and count arguments are only supported for the POST method")
+
     query, error = fetch_query(request.path)
-    if not error:
-        slug, desc = query.names()
-        introduction = query.introduction()
-        inputs = query.inputs()
-        outputs = query.outputs()
+    if error:
+        return render_template("error.html", error=error)
 
-        data = []
-        json_post = ""
-        arg_list, error = convert_http_args_to_json(inputs, request.args)
-        if arg_list and not error:
-            error = error_check_arguments(inputs, arg_list)
-            if not error:
-                if arg_list:
-                    json_post = json.dumps(arg_list, indent=4, sort_keys=True)
+    slug, desc = query.names()
+    introduction = query.introduction()
+    inputs = query.inputs()
+    outputs = query.outputs()
 
-                try:
-                    data = query.fetch(arg_list) if arg_list else []
-                except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
-                    error = err
-                except Exception as err:
-                    error = traceback.format_exc()
-                    print(error)
+    data = []
+    json_post = ""
+    arg_list, error = convert_http_args_to_json(inputs, request.args)
+    if error:
+        return render_template("error.html", error=error)
 
-                for i, arg in enumerate(data):
-                    for output in outputs:
-                        if output[0] == '[' and output[-1] == ']':
-                            try:
-                                arg[output] = ",".join(arg[output])
-                            except KeyError:
-                                pass
+    if arg_list:
+        error = error_check_arguments(inputs, arg_list)
+        if not error:
+            if arg_list:
+                json_post = json.dumps(arg_list, indent=4, sort_keys=True)
+
+            try:
+                data = query.fetch(arg_list) if arg_list else []
+            except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
+                error = err
+            except Exception as err:
+                error = traceback.format_exc()
+                print(error)
+
+            for i, arg in enumerate(data):
+                for output in outputs:
+                    if output[0] == '[' and output[-1] == ']':
+                        try:
+                            arg[output] = ",".join(arg[output])
+                        except KeyError:
+                            pass
 
     json_url = request.url.replace(slug, slug + "/json")
     return render_template("query.html",
@@ -206,6 +220,11 @@ def json_query_handler_get():
     if error:
         raise BadRequest(error)
 
+    offset = int(request.args.get('offset', "-1"))
+    count = int(request.args.get('count', "-1"))
+    if offset >= 0 or count >= 0:
+        raise BadRequest("offset and count arguments are only supported for the POST method")
+
     try:
         data = query.fetch(arg_list) if arg_list else []
     except Exception as err:
@@ -235,8 +254,11 @@ def json_query_handler_post():
     if error:
         raise BadRequest(error)
 
+    offset = int(request.args.get('offset', "0"))
+    count = int(request.args.get('count', str(DEFAULT_QUERY_RESULT_SIZE)))
+
     try:
-        data = query.fetch(request.json) if request.json else []
+        data = query.fetch(request.json, offset=offset, count=count) if request.json else []
     except Exception as err:
         print(traceback.format_exc())
         return jsonify({}), 500

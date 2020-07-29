@@ -32,7 +32,7 @@ class SampleQuery(Query):
 
     def fetch(self, params, count=25, offset=0):
         ret = []
-        for param in params:
+        for param in params[offset:count]:
             ret.append({ 'out_0': param['in_0'], '[out_1]': param['[in_1]'] })
         return ret
 
@@ -85,6 +85,18 @@ class MainTestCase(flask_testing.TestCase):
         resp = self.client.get(url_for('test', **params))
         self.assert200(resp)
 
+    def test_json_get(self):
+        q = SampleQuery()
+        register_query(q)
+        params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
+        resp = self.client.get(url_for('test_json', **params))
+        self.assert200(resp)
+        self.assertEqual(len(resp.json), 2)
+        self.assertEqual(resp.json[0]['out_0'], 'value0')
+        self.assertEqual(resp.json[0]['[out_1]'], 'value1')
+        self.assertEqual(resp.json[1]['out_0'], 'value0')
+        self.assertEqual(resp.json[1]['[out_1]'], 'value2')
+
     def test_json_post(self):
         q = SampleQuery()
         register_query(q)
@@ -99,19 +111,42 @@ class MainTestCase(flask_testing.TestCase):
         resp = self.client.post(url_for('test_json'), json=req_args)
         self.assert200(resp)
         print(resp.data)
+        self.assertEqual(len(resp.json), 2)
         self.assertEqual(resp.json[0]['out_0'], 'value0')
         self.assertEqual(resp.json[0]['[out_1]'], ['value1', 'value3'])
         self.assertEqual(resp.json[1]['out_0'], 'value1')
         self.assertEqual(resp.json[1]['[out_1]'], ['value5', 'value7'])
 
-    def test_json_get(self):
+    def test_json_post_offset(self):
         q = SampleQuery()
         register_query(q)
-        params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
-        resp = self.client.get(url_for('test_json', **params))
+        req_args = [ {
+               'in_0': 'value0',
+               '[in_1]': ['value1','value3']
+            }, {
+               'in_0': 'value1',
+               '[in_1]': ['value5','value7']
+            }
+        ]
+        resp = self.client.post(url_for('test_json', offset=1), json=req_args)
         self.assert200(resp)
-        print(resp.data)
+        self.assertEqual(len(resp.json), 1)
+        self.assertEqual(resp.json[0]['out_0'], 'value1')
+        self.assertEqual(resp.json[0]['[out_1]'], ['value5', 'value7'])
+
+    def test_json_post_count(self):
+        q = SampleQuery()
+        register_query(q)
+        req_args = [ {
+               'in_0': 'value0',
+               '[in_1]': ['value1','value3']
+            }, {
+               'in_0': 'value1',
+               '[in_1]': ['value5','value7']
+            }
+        ]
+        resp = self.client.post(url_for('test_json', count=1), json=req_args)
+        self.assert200(resp)
+        self.assertEqual(len(resp.json), 1)
         self.assertEqual(resp.json[0]['out_0'], 'value0')
-        self.assertEqual(resp.json[0]['[out_1]'], 'value1')
-        self.assertEqual(resp.json[1]['out_0'], 'value0')
-        self.assertEqual(resp.json[1]['[out_1]'], 'value2')
+        self.assertEqual(resp.json[0]['[out_1]'], ['value1', 'value3'])
