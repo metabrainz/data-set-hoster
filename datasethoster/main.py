@@ -11,13 +11,9 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
 registered_queries = {}
 
 TEMPLATE_FOLDER = "template"
-def create_app(is_testing=False):
-    app = Flask(__name__, template_folder = TEMPLATE_FOLDER)
-    app.config['TESTING'] = True
-    return app
 
-app = create_app()
-
+app = Flask(__name__,
+            template_folder = TEMPLATE_FOLDER)
 
 def register_query(query):
     """
@@ -225,10 +221,12 @@ def json_query_handler_post():
     """
 
     if not isinstance(request.json, list):
+        print("no list")
         raise BadRequest("POST data must be a JSON list of hashes.")
 
     query, error = fetch_query(request.path)
     if error:
+        print(error)
         raise BadRequest(error)
 
     inputs = query.inputs()

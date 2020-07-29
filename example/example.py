@@ -12,7 +12,7 @@ class ExampleQuery(Query):
         return """This is the introduction, which could provide more useful info that this introduction does."""
 
     def inputs(self):
-        return ['number', 'num_lines']
+        return ['number', 'num_lines', '[list]']
 
     def outputs(self):
         return ['number', 'multiplied']
