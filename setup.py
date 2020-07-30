@@ -6,7 +6,7 @@ setup(name='datasethoster',
       url='https://github.com/metabrainz/data-set-hoster',
       author='Robert Kaye',
       author_email='rob@metabrainz.org',
-      license='CC0',
+      license='GPL2',
       packages=['datasethoster'],
       install_requires=[
           'Flask==1.1.2',
