@@ -2,6 +2,7 @@ from collections import defaultdict
 import copy
 import json
 import os
+import sys
 import traceback
 
 from flask import Flask, render_template, request, jsonify
@@ -10,6 +11,9 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
 
 DEFAULT_QUERY_RESULT_SIZE = 100
 TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "template")
+
+sys.stderr.write(TEMPLATE_FOLDER + "\n")
+print(TEMPLATE_FOLDER)
 
 registered_queries = {}
 app = Flask(__name__,
