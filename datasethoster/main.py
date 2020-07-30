@@ -1,14 +1,15 @@
 from collections import defaultdict
 import copy
-import traceback
 import json
+import os
+import traceback
 
 from flask import Flask, render_template, request, jsonify
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
 DEFAULT_QUERY_RESULT_SIZE = 100
-TEMPLATE_FOLDER = "template"
+TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "template")
 
 registered_queries = {}
 app = Flask(__name__,
