@@ -266,6 +266,6 @@ def json_query_handler_post():
         data = query.fetch(request.json, offset=offset, count=count) if request.json else []
     except Exception as err:
         print(traceback.format_exc())
-        return jsonify({}), 500
+        return jsonify({ "error": err }), 400
 
     return jsonify(data)
