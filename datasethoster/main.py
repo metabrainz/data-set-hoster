@@ -168,7 +168,7 @@ def web_query_handler():
                 for output in outputs:
                     if output[0] == '[' and output[-1] == ']':
                         try:
-                            arg[output] = ",".join(arg[output])
+                            arg[output] = ",".join(arg[output] or "")
                         except KeyError:
                             pass
 
