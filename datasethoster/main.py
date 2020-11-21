@@ -9,6 +9,8 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
+from datasethoster.decorators import crossdomain
+
 DEFAULT_QUERY_RESULT_SIZE = 100
 TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "template")
 
@@ -187,6 +189,7 @@ def web_query_handler():
                            json_post=json_post)
 
 
+@crossdomain()
 def json_query_handler():
     """
         Disambiguate between GET and POST requests and direct accordingly.
