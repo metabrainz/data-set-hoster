@@ -31,7 +31,7 @@ def register_query(query):
     slug, name = query.names()
     registered_queries[slug] = query
     app.add_url_rule('/%s' % slug, slug, web_query_handler)
-    app.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST'])
+    app.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST', 'OPTIONS'])
 
 
 @app.route('/')
