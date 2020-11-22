@@ -189,7 +189,7 @@ def web_query_handler():
                            json_post=json_post)
 
 
-@crossdomain()
+@crossdomain(headers=["Content-Type"])
 def json_query_handler():
     """
         Disambiguate between GET and POST requests and direct accordingly.
