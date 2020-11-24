@@ -19,10 +19,15 @@ class ExampleQuery(Query):
 
     def fetch(self, args, offset=-1, limit=-1):
         data = []
+        try:
+            number = int(arg['number'])
+        except ValueError:
+            number = 1
+
         for arg in args:
             for i in range(int(arg['num_lines'])):
                 data.append({ 'number': str(i),
-                              'multiplied': str(i * int(arg['number']))
+                              'multiplied': str(i * number)
                             })
 
         return data

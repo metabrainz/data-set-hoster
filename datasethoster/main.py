@@ -69,12 +69,14 @@ def convert_http_args_to_json(inputs, req_args):
     """
 
     args = {}
-    num_args = 0
     list_len = -1
-    for arg in req_args:
-        args[arg] = req_args[arg].split(",")
-        num_args = len(args[arg])
+    for arg, input in zip(req_args, inputs):
+        if input[0] == '[':
+            args[arg] = req_args[arg].split(",")
+        else:
+            args[arg] = [ req_args[arg] ]
         list_len = max(list_len, len(args[arg]))
+
 
     singletons = {}
     for arg in args:
