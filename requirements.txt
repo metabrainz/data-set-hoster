@@ -2,3 +2,5 @@ Flask==1.1.2
 pytest==5.4.3
 pytest-cov==2.10.0
 Flask-Testing==0.8.0
+sentry-sdk[flask]==0.19.3
+six

@@ -14,11 +14,13 @@ FROM tiangolo/uwsgi-nginx-flask:python3.8
 
 RUN apt-get update && apt-get install -y ca-certificates
 
-RUN mkdir /hoster
-WORKDIR /hoster
-COPY . /hoster
+COPY requirements.txt /app
 RUN python -m pip install -r requirements.txt
-# Change the COPY command below to copy any config files or other 
+
+COPY datasethoster /app/datasethoster
+
+# Change the COPY command below to copy any config files or other
 # modules you may need (e.g. config.py) to /app:
-COPY main.py config.py /app/
-RUN chmod +x /app/main.py
+COPY example/example.py example/main.py example/config.py example/uwsgi.ini /app/
+
+ENV FLASK_ENV=development

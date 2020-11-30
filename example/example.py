@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 from datasethoster import Query
-from datasethoster.main import app, register_query
+
 
 class ExampleQuery(Query):
 
+    def setup(self):
+        pass
+
     def names(self):
-        return ("example", "Useless arithmetic table example")
+        return "example", "Useless arithmetic table example"
 
     def introduction(self):
         return """This is the introduction, which could provide more useful info that this introduction does."""
@@ -26,8 +29,3 @@ class ExampleQuery(Query):
                             })
 
         return data
-
-
-if __name__ == "__main__":
-    register_query(ExampleQuery())
-    app.run(host="0.0.0.0", port=8001, debug=True)

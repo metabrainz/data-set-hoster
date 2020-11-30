@@ -182,7 +182,7 @@ Use the Dockerfile in examples as a template and follow the instructions on how 
 the template for your own use. Then build and start the container:
 
 ```
-docker build -t metabrainz/datasethoster .
+docker build -t metabrainz/datasethoster -f example/Dockerfile .
 docker run -d -p 80:80 metabrainz/datasethoster
 ```
 

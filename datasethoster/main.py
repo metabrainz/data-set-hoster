@@ -5,7 +5,9 @@ import os
 import sys
 import traceback
 
-from flask import Flask, render_template, request, jsonify
+from flask import Blueprint, Flask, render_template, request, jsonify
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
@@ -14,12 +16,27 @@ from datasethoster.decorators import crossdomain
 DEFAULT_QUERY_RESULT_SIZE = 100
 TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "template")
 
-sys.stderr.write(TEMPLATE_FOLDER + "\n")
-print(TEMPLATE_FOLDER)
 
 registered_queries = {}
-app = Flask(__name__,
-            template_folder = TEMPLATE_FOLDER)
+
+
+dataset_bp = Blueprint('dataset_hoster', __name__, template_folder=TEMPLATE_FOLDER)
+
+
+def create_app(config_file=None):
+    app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
+    app.register_blueprint(dataset_bp)
+    if config_file:
+        app.config.from_object(config_file)
+
+    if 'SENTRY_DSN' in app.config:
+        sentry_sdk.init(
+            dsn=app.config['SENTRY_DSN'],
+            integrations=[FlaskIntegration()]
+        )
+
+    return app
+
 
 def register_query(query):
     """
@@ -30,17 +47,17 @@ def register_query(query):
     query.setup()
     slug, name = query.names()
     registered_queries[slug] = query
-    app.add_url_rule('/%s' % slug, slug, web_query_handler)
-    app.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST'])
+    dataset_bp.add_url_rule('/%s' % slug, slug, web_query_handler)
+    dataset_bp.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST'])
 
 
-@app.route('/')
+@dataset_bp.route('/')
 def index():
     """ The home page that shows all of the available queries."""
     return render_template("index.html", queries=registered_queries)
 
 
-@app.errorhandler(404)
+@dataset_bp.errorhandler(404)
 def page_not_found(e):
     return render_template('error.html', error="Query not found."), 404
 
