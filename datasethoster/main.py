@@ -29,7 +29,7 @@ def create_app(config_file=None):
     if config_file:
         app.config.from_object(config_file)
 
-    if 'SENTRY_DSN' in app.config:
+    if 'SENTRY_DSN' in app.config and app.config['SENTRY_DSN']:
         sentry_sdk.init(
             dsn=app.config['SENTRY_DSN'],
             integrations=[FlaskIntegration()]
