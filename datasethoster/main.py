@@ -24,14 +24,20 @@ dataset_bp = Blueprint('dataset_hoster', __name__, template_folder=TEMPLATE_FOLD
 
 
 def create_app(config_file=None):
+    """Create a flask app and optionally load a config file and initialise sentry"""
     app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
     app.register_blueprint(dataset_bp)
     if config_file:
         app.config.from_object(config_file)
+    init_sentry(app)
+    return app
 
-    if 'SENTRY_DSN' in app.config and app.config['SENTRY_DSN']:
+
+def init_sentry(app, dsn_config='SENTRY_DSN'):
+    """Register sentry on the given app"""
+    if dsn_config in app.config and app.config[dsn_config]:
         sentry_sdk.init(
-            dsn=app.config['SENTRY_DSN'],
+            dsn=app.config[dsn_config],
             integrations=[FlaskIntegration()]
         )
 
