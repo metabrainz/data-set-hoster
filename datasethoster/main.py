@@ -48,7 +48,7 @@ def register_query(query):
     slug, name = query.names()
     registered_queries[slug] = query
     dataset_bp.add_url_rule('/%s' % slug, slug, web_query_handler)
-    dataset_bp.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST'])
+    dataset_bp.add_url_rule('/%s/json' % slug, slug + "_json", json_query_handler, methods=['GET', 'POST', 'OPTIONS'])
 
 
 @dataset_bp.route('/')
@@ -86,12 +86,14 @@ def convert_http_args_to_json(inputs, req_args):
     """
 
     args = {}
-    num_args = 0
     list_len = -1
-    for arg in req_args:
-        args[arg] = req_args[arg].split(",")
-        num_args = len(args[arg])
+    for arg, input in zip(req_args, inputs):
+        if input[0] == '[':
+            args[arg] = req_args[arg].split(",")
+        else:
+            args[arg] = [ req_args[arg] ]
         list_len = max(list_len, len(args[arg]))
+
 
     singletons = {}
     for arg in args:
@@ -206,7 +208,7 @@ def web_query_handler():
                            json_post=json_post)
 
 
-@crossdomain()
+@crossdomain(headers=["Content-Type"])
 def json_query_handler():
     """
         Disambiguate between GET and POST requests and direct accordingly.
