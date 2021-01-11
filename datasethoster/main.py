@@ -190,6 +190,7 @@ def web_query_handler():
             except Exception as err:
                 error = traceback.format_exc()
                 print(error)
+                sentry_sdk.capture_exception(err)
 
             for i, arg in enumerate(data):
                 for output in outputs:
