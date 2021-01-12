@@ -1,14 +1,11 @@
-import os
-import unittest
 from unittest.mock import patch, call
-import urllib
 
 import flask_testing
-from flask import url_for
+from flask import current_app, url_for
 
 from datasethoster import Query
-from datasethoster.main import app, register_query, convert_http_args_to_json, error_check_arguments, \
-                               web_query_handler, json_query_handler
+from datasethoster.main import create_app, dataset_bp, register_query, web_query_handler, json_query_handler
+
 
 class SampleQuery(Query):
 
@@ -40,7 +37,7 @@ class SampleQuery(Query):
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
-        return app
+        return create_app()
 
     def setUp(self):
         flask_testing.TestCase.setUp(self)
@@ -48,17 +45,17 @@ class MainTestCase(flask_testing.TestCase):
     def tearDown(self):
         flask_testing.TestCase.tearDown(self)
 
-    @patch('datasethoster.main.app.add_url_rule')
+    @patch('datasethoster.main.dataset_bp.add_url_rule')
     def test_register_query(self, add):
 
         q = SampleQuery()
         register_query(q)
         calls = [call("/test", "test", web_query_handler), 
-                 call("/test/json", "test_json", json_query_handler, methods=['GET', 'POST'])]
+                 call("/test/json", "test_json", json_query_handler, methods=['GET', 'POST', 'OPTIONS'])]
         add.assert_has_calls(calls)
 
     def test_index_page(self):
-        resp = self.client.get(url_for('index'))
+        resp = self.client.get(url_for('dataset_hoster.index'))
         self.assert200(resp)
 
     def test_nonexistant_page(self):
@@ -68,28 +65,30 @@ class MainTestCase(flask_testing.TestCase):
     def test_empty_query_page(self):
         q = SampleQuery()
         register_query(q)
+        # Re-register the blueprint to add the new urls that were added with SampleQuery
+        dataset_bp.register(current_app, {}, first_registration=False)
 
-        resp = self.client.get(url_for('test'))
+        resp = self.client.get(url_for('dataset_hoster.test'))
         self.assert200(resp)
 
-        resp = self.client.get(url_for('test_json'))
+        resp = self.client.get(url_for('dataset_hoster.test_json'))
         self.assert400(resp)
 
-        resp = self.client.post(url_for('test_json'), json=[])
+        resp = self.client.post(url_for('dataset_hoster.test_json'), json=[])
         self.assert400(resp)
 
     def test_web_get(self):
         q = SampleQuery()
         register_query(q)
         params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
-        resp = self.client.get(url_for('test', **params))
+        resp = self.client.get(url_for('dataset_hoster.test', **params))
         self.assert200(resp)
 
     def test_json_get(self):
         q = SampleQuery()
         register_query(q)
         params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
-        resp = self.client.get(url_for('test_json', **params))
+        resp = self.client.get(url_for('dataset_hoster.test_json', **params))
         self.assert200(resp)
         self.assertEqual(len(resp.json), 2)
         self.assertEqual(resp.json[0]['out_0'], 'value0')
@@ -108,7 +107,7 @@ class MainTestCase(flask_testing.TestCase):
                '[in_1]': ['value5','value7']
             }
         ]
-        resp = self.client.post(url_for('test_json'), json=req_args)
+        resp = self.client.post(url_for('dataset_hoster.test_json'), json=req_args)
         self.assert200(resp)
         print(resp.data)
         self.assertEqual(len(resp.json), 2)
@@ -128,7 +127,7 @@ class MainTestCase(flask_testing.TestCase):
                '[in_1]': ['value5','value7']
             }
         ]
-        resp = self.client.post(url_for('test_json', offset=1), json=req_args)
+        resp = self.client.post(url_for('dataset_hoster.test_json', offset=1), json=req_args)
         self.assert200(resp)
         self.assertEqual(len(resp.json), 1)
         self.assertEqual(resp.json[0]['out_0'], 'value1')
@@ -145,7 +144,7 @@ class MainTestCase(flask_testing.TestCase):
                '[in_1]': ['value5','value7']
             }
         ]
-        resp = self.client.post(url_for('test_json', count=1), json=req_args)
+        resp = self.client.post(url_for('dataset_hoster.test_json', count=1), json=req_args)
         self.assert200(resp)
         self.assertEqual(len(resp.json), 1)
         self.assertEqual(resp.json[0]['out_0'], 'value0')

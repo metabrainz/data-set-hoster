@@ -18,7 +18,7 @@ Then run this program and go to http://localhost:8000 !
 
 ```python
 from datasethoster import Query
-from datasethoster.main import app, register_query
+from datasethoster.main import create_app, register_query
 
 class ExampleQuery(Query):
 
@@ -47,6 +47,7 @@ class ExampleQuery(Query):
 register_query(ExampleQuery())
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(host="0.0.0.0", port=8000, debug=True)
 ```
 
