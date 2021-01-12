@@ -262,6 +262,7 @@ def json_query_handler_get():
     try:
         data = query.fetch(arg_list) if arg_list else []
     except Exception as err:
+        sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({}), 500
 
@@ -294,6 +295,7 @@ def json_query_handler_post():
     try:
         data = query.fetch(request.json, offset=offset, count=count) if request.json else []
     except Exception as err:
+        sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({ "error": err }), 400
 
