@@ -32,6 +32,12 @@
     <p><b>{{ count }} rows returned</b></p>
 {% endif %}
 
+{% if recording_mbids %}
+    <a class="button"
+       href="https://test.listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">Open results as a playlist</a>
+{% endif %}
+
+
 {% if data %}
   <table>
     <thead>

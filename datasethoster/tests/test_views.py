@@ -109,7 +109,6 @@ class MainTestCase(flask_testing.TestCase):
         ]
         resp = self.client.post(url_for('dataset_hoster.test_json'), json=req_args)
         self.assert200(resp)
-        print(resp.data)
         self.assertEqual(len(resp.json), 2)
         self.assertEqual(resp.json[0]['out_0'], 'value0')
         self.assertEqual(resp.json[0]['[out_1]'], ['value1', 'value3'])

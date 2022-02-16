@@ -172,6 +172,7 @@ def web_query_handler():
     outputs = query.outputs()
 
     data = []
+    recording_mbids = []
     json_post = ""
     arg_list, error = convert_http_args_to_json(inputs, request.args)
     if error:
@@ -200,6 +201,10 @@ def web_query_handler():
                         except KeyError:
                             pass
 
+                    if output == "recording_mbid":
+                        recording_mbids.append(arg["recording_mbid"])
+
+
     json_url = request.url.replace(slug, slug + "/json")
     return render_template("query.html",
                            error=error,
@@ -212,7 +217,8 @@ def web_query_handler():
                            desc=desc,
                            slug=slug,
                            json_url=json_url,
-                           json_post=json_post)
+                           json_post=json_post,
+                           recording_mbids=",".join(recording_mbids))
 
 
 @crossdomain(headers=["Content-Type"])
