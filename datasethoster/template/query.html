@@ -28,6 +28,14 @@
   </div>
 {% endif %}
 
+{% if recording_mbids %}
+  <div style="float: right">
+    <a class="button" target="_blank"
+       href="https://test.listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">Open results as a playlist</a>
+  </div>
+{% endif %}
+
+
   <div>
 {% if count >= 0 %}
        <p><b>{{ count }} rows returned</b></p>
@@ -35,13 +43,6 @@
        <p><b>No results found</b></p>
 {% endif %}
   </div>
-
-{% if recording_mbids %}
-  <div style="float: right">
-    <a class="button"
-       href="https://test.listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">Open results as a playlist</a>
-  </div>
-{% endif %}
 
 {% if data %}
   <table>
