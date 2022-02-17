@@ -218,7 +218,7 @@ def web_query_handler():
                            slug=slug,
                            json_url=json_url,
                            json_post=json_post,
-                           recording_mbids=",".join(recording_mbids[:100]))
+                           recording_mbids=",".join(recording_mbids[:50]))
 
 
 @crossdomain(headers=["Content-Type"])
