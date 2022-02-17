@@ -202,7 +202,7 @@ def web_query_handler():
                             pass
 
                     if output == "recording_mbid":
-                        recording_mbids.append(str(arg["recording_mbid"][:100]))
+                        recording_mbids.append(str(arg["recording_mbid"])[:100])
 
 
     json_url = request.url.replace(slug, slug + "/json")
