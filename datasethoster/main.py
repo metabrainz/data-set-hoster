@@ -202,7 +202,7 @@ def web_query_handler():
                             pass
 
                     if output == "recording_mbid":
-                        recording_mbids.append(str(arg["recording_mbid"])[:100])
+                        recording_mbids.append(str(arg["recording_mbid"]))
 
 
     json_url = request.url.replace(slug, slug + "/json")
@@ -218,7 +218,7 @@ def web_query_handler():
                            slug=slug,
                            json_url=json_url,
                            json_post=json_post,
-                           recording_mbids=",".join(recording_mbids))
+                           recording_mbids=",".join(recording_mbids[:100]))
 
 
 @crossdomain(headers=["Content-Type"])
