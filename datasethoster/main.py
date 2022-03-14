@@ -197,7 +197,7 @@ def web_query_handler():
                 error = traceback.format_exc()
                 sentry_sdk.capture_exception(err)
 
-            for i, arg in enumerate(data):
+            for i, arg in enumerate(data or []):
                 for output in outputs:
                     if output[0] == '[' and output[-1] == ']':
                         try:
