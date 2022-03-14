@@ -188,7 +188,7 @@ def web_query_handler():
                 data = query.fetch(arg_list) if arg_list else []
                 if type(data) == dict:
                     summary = None
-                else type(data) == tuple:
+                else:
                     data, summary = data
             except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
                 error = err
