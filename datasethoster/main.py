@@ -187,7 +187,7 @@ def web_query_handler():
 
             try:
                 data = query.fetch(arg_list) if arg_list else []
-                if type(data) == dict:
+                if type(data) == list:
                     summary = None
                 else:
                     data, summary = data
