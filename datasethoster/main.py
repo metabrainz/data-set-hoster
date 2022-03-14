@@ -186,11 +186,14 @@ def web_query_handler():
 
             try:
                 data = query.fetch(arg_list) if arg_list else []
+                if type(data) == dict:
+                    summary = None
+                else type(data) == tuple:
+                    data, summary = data
             except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
                 error = err
             except Exception as err:
                 error = traceback.format_exc()
-                print(error)
                 sentry_sdk.capture_exception(err)
 
             for i, arg in enumerate(data):
@@ -209,6 +212,7 @@ def web_query_handler():
     return render_template("query.html",
                            error=error,
                            data=data,
+                           summary=summary,
                            count=len(data) if data else -1,
                            inputs=inputs,
                            columns=outputs,
@@ -267,6 +271,8 @@ def json_query_handler_get():
 
     try:
         data = query.fetch(arg_list) if arg_list else []
+        if type(data) == tuple:
+            data, _ = data
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
@@ -300,6 +306,8 @@ def json_query_handler_post():
 
     try:
         data = query.fetch(request.json, offset=offset, count=count) if request.json else []
+        if type(data) == tuple:
+            data, _ = data
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
