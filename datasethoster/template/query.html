@@ -36,13 +36,21 @@
 {% endif %}
 
 
-  <div>
-{% if count >= 0 %}
-       <p><b>{{ count }} rows returned</b></p>
-{% else %}
-       <p><b>No results found</b></p>
+{% if data is not None %}
+    <div>
+  {% if count >= 0 %}
+         <p><b>{{ count }} rows returned</b></p>
+  {% else %}
+         <p><b>No results found</b></p>
+  {% endif %}
+    </div>
 {% endif %}
-  </div>
+
+{% if summary is not None %}
+    <div>
+       {{ summary }}
+    </div>
+{% endif %}
 
 {% if data %}
   <table>

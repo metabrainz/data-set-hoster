@@ -171,7 +171,7 @@ def web_query_handler():
     inputs = query.inputs()
     outputs = query.outputs()
 
-    data = []
+    data = None
     recording_mbids = []
     json_post = ""
     arg_list, error = convert_http_args_to_json(inputs, request.args)
