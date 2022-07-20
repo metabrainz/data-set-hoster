@@ -1,3 +1,4 @@
+import unittest.mock
 from unittest.mock import patch, call
 
 import flask_testing
@@ -82,6 +83,24 @@ class MainTestCase(flask_testing.TestCase):
         register_query(q)
         params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
         resp = self.client.get(url_for('dataset_hoster.test', **params))
+        self.assert200(resp)
+
+    def test_web_query_multiple(self):
+        # Check that multiple items can be passed in for a field with "val1,val2"
+        # and that if a value has a , in it, the field can be quoted
+        q = SampleQuery()
+        register_query(q)
+        q.fetch = unittest.mock.Mock()
+        q.fetch.return_value = [{'out_0': 'one', '[out_1]': ['two', 'three']}]
+
+        params = { 'in_0':'value0', '[in_1]': 'value1,value2' }
+        resp = self.client.get(url_for('dataset_hoster.test', **params))
+        q.fetch.assert_called_with([{'in_0': 'value0', '[in_1]': 'value1'}, {'in_0': 'value0', '[in_1]': 'value2'}])
+
+        params = { 'in_0':'value0', '[in_1]': 'value1,"value2,value3"' }
+        resp = self.client.get(url_for('dataset_hoster.test', **params))
+        q.fetch.assert_called_with([{'in_0': 'value0', '[in_1]': 'value1'}, {'in_0': 'value0', '[in_1]': 'value2,value3'}])
+
         self.assert200(resp)
 
     def test_json_get(self):
