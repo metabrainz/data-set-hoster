@@ -66,8 +66,9 @@ class MainTestCase(flask_testing.TestCase):
     def test_empty_query_page(self):
         q = SampleQuery()
         register_query(q)
-        # Re-register the blueprint to add the new urls that were added with SampleQuery
-        dataset_bp.register(current_app, {}, first_registration=False)
+        # Delete the blueprint so that it can be re-registered with the urls that were added with SampleQuery
+        del self.app.blueprints['dataset_hoster']
+        dataset_bp.register(current_app, {})
 
         resp = self.client.get(url_for('dataset_hoster.test'))
         self.assert200(resp)

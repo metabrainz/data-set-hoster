@@ -12,6 +12,6 @@ setup(name='datasethoster',
       package_data={'datasethoster': ['template/*.html']},
       include_package_data=True,
       install_requires=[
-          'Flask>=1.1.2', 'six', 'sentry-sdk[flask]>=0.19.3'
+          'Flask>=2.1.3', 'six', 'sentry-sdk[flask]>=0.19.3'
       ],
       zip_safe=False)
