@@ -1,8 +1,8 @@
-from collections import defaultdict
 import copy
+import csv
+import io
 import json
 import os
-import sys
 import traceback
 
 from flask import Blueprint, Flask, render_template, request, jsonify
@@ -95,7 +95,7 @@ def convert_http_args_to_json(inputs, req_args):
     list_len = -1
     for arg, input in zip(req_args, inputs):
         if input[0] == '[':
-            args[arg] = req_args[arg].split(",")
+            args[arg] = next(csv.reader(io.StringIO(req_args[arg])))
         else:
             args[arg] = [ req_args[arg] ]
         list_len = max(list_len, len(args[arg]))
