@@ -172,8 +172,8 @@ def web_query_handler():
     outputs = query.outputs()
 
     data = None
-    summary = None
     recording_mbids = []
+    results = []
     json_post = ""
     arg_list, error = convert_http_args_to_json(inputs, request.args)
     if error:
@@ -182,17 +182,21 @@ def web_query_handler():
     if arg_list:
         error = error_check_arguments(inputs, arg_list)
         if not error:
-            if arg_list:
-                json_post = json.dumps(arg_list, indent=4, sort_keys=True)
+            json_post = json.dumps(arg_list, indent=4, sort_keys=True)
 
             try:
                 data = query.fetch(arg_list) if arg_list else []
-                if type(data) == tuple:
-                    if len(data) != 2:
-                        raise InternalServerError("Query's .fetch() method returned tuple that didn't have exactly 2 elements")
-                    data, summary = data
+                data = query.fetch(arg_list)
+                if outputs is not None:
+                    results = [
+                        {
+                            "type": "dataset",
+                            "columns": outputs,
+                            "data": data
+                        }
+                    ]
                 else:
-                    summary = None
+                    results = data
             except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
                 error = err
             except Exception as err:
@@ -210,22 +214,19 @@ def web_query_handler():
                     if output == "recording_mbid":
                         recording_mbids.append(str(arg["recording_mbid"]))
 
-
     json_url = request.url.replace(slug, slug + "/json")
-    return render_template("query.html",
-                           error=error,
-                           data=data,
-                           summary=summary,
-                           count=len(data) if data else -1,
-                           inputs=inputs,
-                           columns=outputs,
-                           introduction=introduction,
-                           args=request.args,
-                           desc=desc,
-                           slug=slug,
-                           json_url=json_url,
-                           json_post=json_post,
-                           recording_mbids=",".join(recording_mbids[:50]))
+    return render_template(
+        "query.html",
+        error=error,
+        inputs=inputs,
+        results=results,
+        introduction=introduction,
+        args=request.args,
+        desc=desc,
+        slug=slug,
+        json_url=json_url,
+        json_post=json_post
+    )
 
 
 @crossdomain(headers=["Content-Type"])

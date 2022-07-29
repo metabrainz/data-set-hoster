@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class Query():
+class Query:
 
     def __init__(self):
         """ The constructor, override it if you need to. """
@@ -33,7 +33,9 @@ class Query():
 
     @abstractmethod
     def outputs(self):
-        """ return a list of text column names that will be returned by the fetch function """
+        """ return a list of text column names that will be returned by the fetch function.
+            return None if the outputs are dynamic and you want those to be inferred.
+        """
         pass
 
     @abstractmethod
