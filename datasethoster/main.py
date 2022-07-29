@@ -171,8 +171,6 @@ def web_query_handler():
     inputs = query.inputs()
     outputs = query.outputs()
 
-    data = None
-    recording_mbids = []
     results = []
     json_post = ""
     arg_list, error = convert_http_args_to_json(inputs, request.args)
@@ -201,16 +199,6 @@ def web_query_handler():
             except Exception as err:
                 error = traceback.format_exc()
                 sentry_sdk.capture_exception(err)
-
-            # TODO: check whether needed, if so move to per output
-            if outputs:
-                for i, arg in enumerate(data or []):
-                    for output in outputs:
-                        if output[0] == '[' and output[-1] == ']':
-                            try:
-                                arg[output] = ",".join(arg[output] or "")
-                            except KeyError:
-                                pass
 
     json_url = request.url.replace(slug, slug + "/json")
     return render_template(
