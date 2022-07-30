@@ -1,3 +1,11 @@
+{% macro link_mb(entity, value) %}
+  {% if value %}
+    <a href="https://musicbrainz.org/{{ entity }}/{{ value }}">{{ value }}</a>
+  {% else %}
+    {{ value }}
+  {% endif %}
+{% endmacro %}
+
 {% macro format_output(output) %}
   {% if output %}
     {% if "recording_mbid" in output.columns %}
@@ -30,13 +38,13 @@
           {% for column in output.columns %}
             {% set value = row[column]|join(',') if column[0] == '[' and column[-1] == ']' else row[column] %}
             {% if column.endswith("recording_mbid") or column.endswith("recording_id") %}
-              <td><a href="https://musicbrainz.org/recording/{{ row[column] }}">{{ row[column] }}</a></td>
+              <td>{{ link_mb('recording', row[column]) }}</td>
             {% elif column.endswith("release_mbid") or column.endswith("release_id") %}
-              <td><a href="https://musicbrainz.org/release/{{ row[column] }}">{{ row[column] }}</a></td>
+              <td>{{ link_mb('release', row[column]) }}</td>
             {% elif column.endswith("release_group_mbid") or column.endswith("release_group_id") %}
-              <td><a href="https://musicbrainz.org/release-group/{{ row[column] }}">{{ row[column] }}</a></td>
+              <td>{{ link_mb('release-group', row[column]) }}</td>
             {% elif column.endswith("artist_mbid") or column.endswith("artist_id") or column.endswith("artist_credit_id") %}
-              <td><a href="https://musicbrainz.org/artist/{{ row[column] }}">{{ row[column] }}</a></td>
+              <td>{{ link_mb('artist', row[column]) }}</td>
             {% elif column.endswith("_json") %}
               <td>
                 <pre>{{ row[column] }}</pre>
