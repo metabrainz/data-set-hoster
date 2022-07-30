@@ -10,8 +10,9 @@
   {% if output %}
     {% if "recording_mbid" in output.columns %}
       <div style="float: right">
+        {% set recording_mbids = output.data[:50] | selectattr('recording_mbid') | join(',', 'recording_mbid') %}
         <a class="button" target="_blank"
-           href="https://listenbrainz.org/player/?recording_mbids={{ output.data[:50]|join(',', 'recording_mbid') }}">
+           href="https://listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">
           Open results as a playlist
         </a>
       </div>
