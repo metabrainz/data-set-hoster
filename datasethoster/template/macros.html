@@ -1,6 +1,9 @@
 {% macro link_mb(entity, value) %}
   {% if value %}
-    <a href="https://musicbrainz.org/{{ entity }}/{{ value }}">{{ value }}</a>
+    <a href="https://musicbrainz.org/{{ entity }}/{{ value }}"
+       target="_blank" rel="noopener noreferrer">
+      {{ value }}
+    </a>
   {% else %}
     {{ value }}
   {% endif %}
@@ -12,7 +15,7 @@
       {% set recording_mbids = output.data[:50] | selectattr('recording_mbid') | join(',', 'recording_mbid') %}
       {% if recording_mbids %}
         <div style="float: right">
-          <a class="button" target="_blank"
+          <a class="button" target="_blank" rel="noopener noreferrer"
              href="https://listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">
             Open results as a playlist
           </a>
