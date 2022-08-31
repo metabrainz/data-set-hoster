@@ -162,7 +162,11 @@ derived from the Query object and override the following functions:
          passed in parameters, the function should carry out more error checking
          on the arguments and then fetch the data needed. This function should
          return a list of dicts with keys named exactly after each of the
-         outputs. For the POST method endpoint the arguments count and
+         outputs.
+         Alternatively, return a tuple of (data, summary), and the summary will
+         be displayed as HTML above the results. Use this to return additional
+         information about the queries, such timing or debug information.
+         For the POST method endpoint the arguments count and
          offset may be provided -- for the web view and GET JSON views, offset
          and count are not handled.
 
