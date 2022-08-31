@@ -187,10 +187,12 @@ def web_query_handler():
 
             try:
                 data = query.fetch(arg_list) if arg_list else []
-                if type(data) == list:
-                    summary = None
-                else:
+                if type(data) == tuple:
+                    if len(data) != 2:
+                        raise InternalServerError("Query's .fetch() method returned tuple that didn't have exactly 2 elements")
                     data, summary = data
+                else:
+                    summary = None
             except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
                 error = err
             except Exception as err:
@@ -273,6 +275,8 @@ def json_query_handler_get():
     try:
         data = query.fetch(arg_list) if arg_list else []
         if type(data) == tuple:
+            if len(data) != 2:
+                raise InternalServerError("Query's .fetch() method returned tuple that didn't have exactly 2 elements")
             data, _ = data
     except Exception as err:
         sentry_sdk.capture_exception(err)
@@ -308,6 +312,8 @@ def json_query_handler_post():
     try:
         data = query.fetch(request.json, offset=offset, count=count) if request.json else []
         if type(data) == tuple:
+            if len(data) != 2:
+                raise InternalServerError("Query's .fetch() method returned tuple that didn't have exactly 2 elements")
             data, _ = data
     except Exception as err:
         sentry_sdk.capture_exception(err)
