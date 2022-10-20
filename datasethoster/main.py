@@ -185,7 +185,6 @@ def web_query_handler():
             json_post = json.dumps(arg_list, indent=4, sort_keys=True)
 
             try:
-                data = query.fetch(arg_list) if arg_list else []
                 data = query.fetch(arg_list)
                 if outputs is not None:
                     results = [
@@ -258,7 +257,7 @@ def json_query_handler_get():
 
     slug, desc = query.names()
     inputs = query.inputs()
-    columns = query.outputs()
+    outputs = query.outputs()
 
     arg_list, error = convert_http_args_to_json(inputs, request.args)
     if error:
@@ -274,11 +273,7 @@ def json_query_handler_get():
         raise BadRequest("offset and count arguments are only supported for the POST method")
 
     try:
-        data = query.fetch(arg_list) if arg_list else []
-        if type(data) == tuple:
-            if len(data) != 2:
-                raise InternalServerError("Query's .fetch() method returned tuple that didn't have exactly 2 elements")
-            data, _ = data
+        data = query.fetch(arg_list, offset=offset, count=count) if arg_list else []
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
@@ -312,13 +307,9 @@ def json_query_handler_post():
 
     try:
         data = query.fetch(request.json, offset=offset, count=count) if request.json else []
-        if type(data) == tuple:
-            if len(data) != 2:
-                raise InternalServerError("Query's .fetch() method returned tuple that didn't have exactly 2 elements")
-            data, _ = data
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
-        return jsonify({ "error": err }), 400
+        return jsonify({"error": err}), 400
 
     return jsonify(data)
