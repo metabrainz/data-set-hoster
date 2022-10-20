@@ -20,7 +20,7 @@ class ExampleQuery(Query):
     def outputs(self):
         return ['number', 'multiplied']
 
-    def fetch(self, params, offset=-1, limit=-1):
+    def fetch(self, params, offset=-1, count=-1):
         data = []
         try:
             number = int(params[0]['number'])
@@ -28,6 +28,7 @@ class ExampleQuery(Query):
             number = 1
 
         for param in params:
+            print(param)
             for i in range(int(param['num_lines'])):
                 data.append({ 'number': str(i),
                               'multiplied': str(i * number)

@@ -1,4 +1,5 @@
 {%- extends 'base.html' -%}
+{%- from 'macros.html' import format_output -%}
 {%- block title -%}{{ slug }}{% endblock %}
 {%- block content -%}
 
@@ -12,9 +13,9 @@
 <form action="/{{ slug }}">
   {% for input in inputs %}
      <label for="{{ input }}">{{ input }}</label>
-     <input type="text" 
-            id="{{ input }}" 
-            name="{{ input }}" 
+     <input type="text"
+            id="{{ input }}"
+            name="{{ input }}"
             placeholder="{% if input[0] == '[' %}list of items{% else %}single value{% endif %}"
             value="{{args[input] | escape }}"><br>
   {% endfor %}
@@ -28,78 +29,29 @@
   </div>
 {% endif %}
 
-{% if recording_mbids %}
-  <div style="float: right">
-    <a class="button" target="_blank"
-       href="https://listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">Open results as a playlist</a>
-  </div>
-{% endif %}
+<div>
+  {% for result in results %}
+    {% if result.type == "markup" %}
+      {{ result.data }}
+    {% elif result.type == "dataset" %}
+      {{ format_output(result) }}
+    {% else %}
+      <p><b>INVALID OUTPUT TYPE: PLEASE FIX! (RENDERING AS IS FOR NOW)</b></p>
+      {{ result }}
+    {% endif %}
+  {% endfor %}
 
-
-{% if data is not none %}
-    <div>
-  {% if count >= 0 %}
-         <p><b>{{ count }} rows returned</b></p>
-  {% else %}
-         <p><b>No results found</b></p>
-  {% endif %}
-    </div>
-{% endif %}
-
-{% if summary is not none %}
-    <div>
-       {{ summary|safe }}
-    </div>
-{% endif %}
-
-{% if data %}
-  <table>
-    <thead>
-      <tr>
-        {% for column in columns %}
-          <th>{{ column }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in data %}
-        <tr>
-          {% for column in columns %}
-            {% if column.endswith("recording_mbid") or column.endswith("recording_id")  %}
-              <td><a href="https://musicbrainz.org/recording/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("release_mbid") or column.endswith("release_id")  %}
-              <td><a href="https://musicbrainz.org/release/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("release_group_mbid") or column.endswith("release_group_id") %}
-              <td><a href="https://musicbrainz.org/release-group/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("artist_mbid") or column.endswith("artist_id") or column.endswith("artist_credit_id") %}
-              <td><a href="https://musicbrainz.org/artist/{{ row[column] }}">{{ row[column] }}</a></td>
-            {% elif column.endswith("_json") %}
-              <td><pre>{{ row[column] }}</pre></td>
-            {% elif row[column] is iterable and row[column] is not string  %} 
-              <td>
-                {% for v in row[column] %}
-                    {{ v }}
-                {% endfor %}
-              </td>
-            {% else %}
-              <td>{{ row[column] }}</td>
-            {% endif %}
-          {% endfor %}
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
   {% if json_post %}
-     <div style="padding-top: 3em">
-       <small>JSON POST data for this query:</small>
-       <div id="json-post">
-          <pre style="background-color: #FFF">{{ json_post }}</pre>
-       </div>
-     </div>
+    <div style="padding-top: 3em">
+      <small>JSON POST data for this query:</small>
+      <div id="json-post">
+        <pre style="background-color: #FFF">{{ json_post }}</pre>
+      </div>
+    </div>
   {% endif %}
-{% endif %}
+</div>
 
-{% endblock%}
+{% endblock %}
 
 {% block scripts %}
 {% endblock %}
