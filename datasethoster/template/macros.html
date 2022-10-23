@@ -42,15 +42,20 @@
       {% for row in output.data %}
         <tr>
           {% for column in output.columns %}
-            {% set value = row[column]|join(',') if column[0] == '[' and column[-1] == ']' and row[column] is not none else row[column] %}
             {% if column.endswith("recording_mbid") or column.endswith("recording_id") %}
               <td>{{ link_mb('recording', row[column]) }}</td>
             {% elif column.endswith("release_mbid") or column.endswith("release_id") %}
               <td>{{ link_mb('release', row[column]) }}</td>
             {% elif column.endswith("release_group_mbid") or column.endswith("release_group_id") %}
               <td>{{ link_mb('release-group', row[column]) }}</td>
-            {% elif column.endswith("artist_mbid") or column.endswith("artist_id") or column.endswith("artist_credit_id") %}
+            {% elif column.endswith("artist_mbid") %}
               <td>{{ link_mb('artist', row[column]) }}</td>
+            {% elif column.endswith("[artist_credit_mbids]") and row[column] is iterable %}
+              <td>
+                {% for v in row[column] %}
+                  {{ link_mb('artist', v) }}
+                {% endfor %}
+              </td>
             {% elif column.endswith("_json") %}
               <td>
                 <pre>{{ row[column] }}</pre>
