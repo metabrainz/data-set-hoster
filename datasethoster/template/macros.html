@@ -42,7 +42,7 @@
       {% for row in output.data %}
         <tr>
           {% for column in output.columns %}
-            {% set value = row[column]|join(',') if column[0] == '[' and column[-1] == ']' else row[column] %}
+            {% set value = row[column]|join(',') if column[0] == '[' and column[-1] == ']' and row[column] is not none else row[column] %}
             {% if column.endswith("recording_mbid") or column.endswith("recording_id") %}
               <td>{{ link_mb('recording', row[column]) }}</td>
             {% elif column.endswith("release_mbid") or column.endswith("release_id") %}
