@@ -94,10 +94,11 @@ def convert_http_args_to_json(inputs, req_args):
     args = {}
     list_len = -1
     for arg, input in zip(req_args, inputs):
+        req_arg = req_args[arg].strip()
         if input[0] == '[':
-            args[arg] = next(csv.reader(io.StringIO(req_args[arg])))
+            args[arg] = next(csv.reader(io.StringIO(req_arg)))
         else:
-            args[arg] = [ req_args[arg] ]
+            args[arg] = [ req_arg ]
         list_len = max(list_len, len(args[arg]))
 
 

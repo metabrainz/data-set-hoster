@@ -22,6 +22,16 @@ class TestMain(unittest.TestCase):
         self.assertEqual(args[1]['[in_1]'], 'value2')
 
         req_args = {
+            'in_0': ' value0 ',
+            '[in_1]': 'value1'
+        }
+
+        args, error = convert_http_args_to_json(inputs, req_args)
+        self.assertEqual(error, "")
+        self.assertEqual(args[0]['in_0'], 'value0')
+        self.assertEqual(args[0]['[in_1]'], 'value1')
+
+        req_args = {
             '[in_1]': 'value1,value2'
         }
         args, error = convert_http_args_to_json(inputs, req_args)
