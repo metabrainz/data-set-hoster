@@ -10,10 +10,10 @@ class TestMain(unittest.TestCase):
 
         inputs = ['in_0', '[in_1]']
         req_args = {
-            'in_0': 'value0',
+            'in_0': ' value0  ',
             '[in_1]': 'value1,value2'
         }
-        args, error = convert_http_args_to_json(inputs, req_args)
+        args, error = convert_http_args_to_json(inputs, req_args, True)
         self.assertEqual(error, "")
         self.assertEqual(len(args), 2)
         self.assertEqual(args[0]['in_0'], 'value0')
@@ -26,21 +26,21 @@ class TestMain(unittest.TestCase):
             '[in_1]': 'value1'
         }
 
-        args, error = convert_http_args_to_json(inputs, req_args)
+        args, error = convert_http_args_to_json(inputs, req_args, False)
         self.assertEqual(error, "")
-        self.assertEqual(args[0]['in_0'], 'value0')
+        self.assertEqual(args[0]['in_0'], ' value0 ')
         self.assertEqual(args[0]['[in_1]'], 'value1')
 
         req_args = {
             '[in_1]': 'value1,value2'
         }
-        args, error = convert_http_args_to_json(inputs, req_args)
+        args, error = convert_http_args_to_json(inputs, req_args, True)
         self.assertEqual(error, "Missing parameter 'in_0'.")
     
         req_args = {
             '[in_6]': 'value1,value2'
         }
-        args, error = convert_http_args_to_json(inputs, req_args)
+        args, error = convert_http_args_to_json(inputs, req_args, True)
         self.assertEqual(error, "Missing parameter 'in_0'.")
 
         inputs = ['in_0', '[in_1]', '[in_2]']
@@ -49,7 +49,7 @@ class TestMain(unittest.TestCase):
             '[in_1]': 'value1,value2',
             '[in_2]': 'value1'
         }
-        args, error = convert_http_args_to_json(inputs, req_args)
+        args, error = convert_http_args_to_json(inputs, req_args, True)
         self.assertEqual(error, "Lists passed as parameters must all be the same length.")
 
     def test_error_check_arguments(self):

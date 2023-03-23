@@ -83,18 +83,21 @@ def fetch_query(url):
     return query, ""
 
 
-def convert_http_args_to_json(inputs, req_args):
+def convert_http_args_to_json(inputs, req_args, web_query):
     """
-        THis function converts a series of HTTP arguments into a sane JSON (dict)
+        This function converts a series of HTTP arguments into a sane JSON (dict)
         that mimicks the data that is passed to the POST function. Also does
-        some error checking on the data. Returns a complete dict or parameters 
-        and a blank string or None and an error string.
+        some error checking on the data.
+        If web_query is passed in, removes any leading and trailing space around
+        args.
+
+        Returns a complete dict or parameters and a blank string or None and an error string.
     """
 
     args = {}
     list_len = -1
     for arg, input in zip(req_args, inputs):
-        req_arg = req_args[arg].strip()
+        req_arg = req_args[arg].strip() if web_query else req_args[arg]
         if input[0] == '[':
             args[arg] = next(csv.reader(io.StringIO(req_arg)))
         else:
@@ -174,7 +177,7 @@ def web_query_handler():
 
     results = []
     json_post = ""
-    arg_list, error = convert_http_args_to_json(inputs, request.args)
+    arg_list, error = convert_http_args_to_json(inputs, request.args, True)
     if error:
         return render_template("error.html", error=error)
 
@@ -247,7 +250,7 @@ def json_query_handler_get():
     inputs = query.inputs()
     outputs = query.outputs()
 
-    arg_list, error = convert_http_args_to_json(inputs, request.args)
+    arg_list, error = convert_http_args_to_json(inputs, request.args, False)
     if error:
         raise BadRequest(error)
 
