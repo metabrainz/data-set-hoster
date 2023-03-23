@@ -29,6 +29,11 @@ class SampleQuery(Query):
         return ['out_0', '[out_1]']
 
     def fetch(self, params, count=25, offset=0):
+        if count == -1:
+            count = 25
+        if offset == -1:
+            offset = 0
+
         ret = []
         for param in params[offset:count]:
             ret.append({ 'out_0': param['in_0'], '[out_1]': param['[in_1]'] })
