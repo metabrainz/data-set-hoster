@@ -5,7 +5,7 @@ import json
 import os
 import traceback
 
-from flask import Blueprint, Flask, render_template, request, jsonify
+from flask import Blueprint, Flask, render_template, request, jsonify, redirect
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
