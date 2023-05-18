@@ -5,13 +5,14 @@ import json
 import os
 import traceback
 
-from flask import Blueprint, Flask, render_template, request, jsonify
+from flask import Blueprint, Flask, render_template, request, jsonify, redirect
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
 from datasethoster.decorators import crossdomain
+from datasethoster.exceptions import RedirectError, QueryError
 
 DEFAULT_QUERY_RESULT_SIZE = 100
 TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "template")
@@ -198,6 +199,10 @@ def web_query_handler():
                     ]
                 else:
                     results = data
+            except RedirectError as red:
+                return redirect(red.url)
+            except QueryError as err:
+                error = err
             except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
                 error = err
             except Exception as err:
