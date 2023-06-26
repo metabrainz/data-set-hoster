@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
+from typing import List, Union
+
+from pydantic import BaseModel
 
 from datasethoster import Query
 
 
-class ExampleQuery(Query):
+class ExampleInput(BaseModel):
+    number: int
+    num_lines: int
+
+
+class ExampleOutput(BaseModel):
+    number1: int
+    multiplied: int
+
+
+class ExampleQuery(Query[ExampleInput, ExampleOutput]):
 
     def setup(self):
         pass
@@ -15,23 +28,20 @@ class ExampleQuery(Query):
         return """This is the introduction, which could provide more useful info that this introduction does."""
 
     def inputs(self):
-        return ['number', 'num_lines']
+        return ExampleInput
 
     def outputs(self):
-        return ['number', 'multiplied']
+        return ExampleOutput
 
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params: List[ExampleInput], offset=-1, count=-1) -> List[ExampleOutput]:
+        print(params)
         data = []
-        try:
-            number = int(params[0]['number'])
-        except ValueError:
-            number = 1
-
         for param in params:
-            print(param)
-            for i in range(int(param['num_lines'])):
-                data.append({ 'number': str(i),
-                              'multiplied': str(i * number)
-                            })
-
-        return data
+            number = param.number
+            for i in range(1, param.num_lines + 1):
+                data.append({
+                    'number': i,
+                    'multiplied': i * number
+                })
+        outputs = [ExampleOutput(number1=x["number"], multiplied=x["multiplied"]) for x in data]
+        return outputs

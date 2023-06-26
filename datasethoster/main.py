@@ -5,12 +5,14 @@ import json
 import os
 import traceback
 
-from flask import Blueprint, Flask, render_template, request, jsonify, redirect
+from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
 import sentry_sdk
+from pydantic import BaseModel
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
+from datasethoster import Query
 from datasethoster.decorators import crossdomain
 from datasethoster.exceptions import RedirectError, QueryError
 
@@ -156,65 +158,73 @@ def error_check_arguments(inputs, req_json):
     return ""
 
 
+def convert_results_to_outputs(results):
+    if not results:
+        return []
+
+    outputs = []
+    last_keys = results[0].__fields__.keys()
+    last_output = []
+    for result in results:
+        current_keys = result.__fields__.keys()
+
+        if current_keys != last_keys:
+            outputs.append({"columns": last_keys, "data": last_output})
+            last_keys = current_keys
+            last_output = []
+
+        last_output.append(result.dict())
+
+    if last_keys and last_output:
+        outputs.append({"columns": last_keys, "data": last_output})
+
+    return outputs
+
+
 def web_query_handler():
     """
         This is the view handler for the web page. It is more complex because of all
         the guff shown on the web page to make it easy to discover these data sets.
     """
+    query, error = fetch_query(request.path)
+    if error:
+        return render_template("error.html", error=error)
 
     offset = int(request.args.get('offset', "-1"))
     count = int(request.args.get('count', "-1"))
     if offset >= 0 or count >= 0:
         return render_template("error.html", error="offset and count arguments are only supported for the POST method")
 
-    query, error = fetch_query(request.path)
-    if error:
-        return render_template("error.html", error=error)
-
     slug, desc = query.names()
     introduction = query.introduction()
-    inputs = query.inputs()
-    outputs = query.outputs()
-
-    results = []
-    json_post = ""
-    arg_list, error = convert_http_args_to_json(inputs, request.args, True)
-    if error:
-        return render_template("error.html", error=error)
-
-    if arg_list:
-        error = error_check_arguments(inputs, arg_list)
-        if not error:
-            json_post = json.dumps(arg_list, indent=4, sort_keys=True)
-
-            try:
-                data = query.fetch(arg_list)
-                if outputs is not None:
-                    results = [
-                        {
-                            "type": "dataset",
-                            "columns": outputs,
-                            "data": data
-                        }
-                    ]
-                else:
-                    results = data
-            except RedirectError as red:
-                return redirect(red.url)
-            except QueryError as err:
-                error = err
-            except (BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound) as err:
-                error = err
-            except Exception as err:
-                error = traceback.format_exc()
-                sentry_sdk.capture_exception(err)
-
+    input_model = query.inputs()
     json_url = request.url.replace(slug, slug + "/json")
+
+    outputs = []
+    json_post = ""
+    if request.args:
+        try:
+            inputs = [input_model(**request.args)]
+            results = query.fetch(inputs)
+        except RedirectError as red:
+            return redirect(red.url)
+        except Exception as err:
+            error = traceback.format_exc()
+            sentry_sdk.capture_exception(err)
+            return render_template("error.html", error=error)
+
+        outputs = convert_results_to_outputs(results)
+
+        input_args = inputs[0].dict()
+        json_post = json.dumps([input_args], indent=4)
+
+    input_keys = input_model.__fields__.keys()
+
     return render_template(
         "query.html",
         error=error,
-        inputs=inputs,
-        results=results,
+        inputs=input_keys,
+        results=outputs,
         introduction=introduction,
         args=request.args,
         desc=desc,
@@ -246,20 +256,7 @@ def json_query_handler_get():
         query parameters. If you need more than a handful of parameters,
         use the POST method instead.
     """
-
     query, error = fetch_query(request.path)
-    if error:
-        raise BadRequest(error)
-
-    slug, desc = query.names()
-    inputs = query.inputs()
-    outputs = query.outputs()
-
-    arg_list, error = convert_http_args_to_json(inputs, request.args, False)
-    if error:
-        raise BadRequest(error)
-
-    error = error_check_arguments(inputs, arg_list)
     if error:
         raise BadRequest(error)
 
@@ -268,14 +265,21 @@ def json_query_handler_get():
     if offset >= 0 or count >= 0:
         raise BadRequest("offset and count arguments are only supported for the POST method")
 
+    input_model = query.inputs()
+
     try:
-        data = query.fetch(arg_list, offset=offset, count=count) if arg_list else []
+        inputs = [input_model(**request.args)]
+    except Exception as e:
+        raise BadRequest(str(e))
+
+    try:
+        data = query.fetch(inputs)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({}), 500
 
-    return jsonify(data)
+    return Response(json.dumps([x.dict() for x in data]), mimetype="application/json")
 
 
 def json_query_handler_post():
@@ -283,29 +287,27 @@ def json_query_handler_post():
         The POST view handler. Sanity check parameters, run the query and return it.
         Simple!
     """
-
-    if not isinstance(request.json, list):
-        raise BadRequest("POST data must be a JSON list of hashes.")
-
     query, error = fetch_query(request.path)
     if error:
         raise BadRequest(error)
 
-    inputs = query.inputs()
-    outputs = query.outputs()
+    input_model = query.inputs()
 
-    error = error_check_arguments(inputs, request.json)
-    if error:
-        raise BadRequest(error)
+    inputs = []
+    try:
+        for item in request.json:
+            inputs.append(input_model(**item))
+    except Exception as e:
+        raise BadRequest(str(e))
 
     offset = int(request.args.get('offset', "0"))
     count = int(request.args.get('count', str(DEFAULT_QUERY_RESULT_SIZE)))
 
     try:
-        data = query.fetch(request.json, offset=offset, count=count) if request.json else []
+        data = query.fetch(inputs, offset=offset, count=count)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({"error": err}), 400
 
-    return jsonify(data)
+    return Response(json.dumps([x.dict() for x in data]), mimetype="application/json")

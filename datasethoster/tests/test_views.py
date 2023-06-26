@@ -23,7 +23,7 @@ class SampleQuery(Query):
         return "intro"
 
     def inputs(self):
-        return ['in_0', '[in_1]']
+        return SampleInputModel
 
     def outputs(self):
         return ['out_0', '[out_1]']

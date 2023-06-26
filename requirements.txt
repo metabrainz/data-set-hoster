@@ -3,4 +3,8 @@ pytest==5.4.3
 pytest-cov==2.10.0
 Flask-Testing==0.8.1
 sentry-sdk[flask]==0.19.3
-six
+six~=1.16.0
+
+setuptools~=65.5.1
+pydantic~=1.10.8
+Werkzeug~=2.3.4

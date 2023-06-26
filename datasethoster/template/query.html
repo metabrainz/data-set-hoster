@@ -31,14 +31,7 @@
 
 <div>
   {% for result in results %}
-    {% if result.type == "markup" %}
-      {{ result.data }}
-    {% elif result.type == "dataset" %}
-      {{ format_output(result) }}
-    {% else %}
-      <p><b>INVALID OUTPUT TYPE: PLEASE FIX! (RENDERING AS IS FOR NOW)</b></p>
-      {{ result }}
-    {% endif %}
+    {{ format_output(result) }}
   {% endfor %}
 
   {% if json_post %}
