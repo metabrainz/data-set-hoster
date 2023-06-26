@@ -10,7 +10,7 @@
 # Then create your query object and save it to a file called main.py. Finally,
 # if your script is dependent on other files, you will need to copy them into /app.
 # See the comment below:
-FROM tiangolo/uwsgi-nginx-flask:python3.8
+FROM tiangolo/uwsgi-nginx-flask:python3.11
 
 RUN apt-get update && apt-get install -y ca-certificates
 

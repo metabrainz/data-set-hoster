@@ -1,0 +1,19 @@
+POST http://localhost:9000/example/json
+Content-Type: application/json
+
+[{"number":  1, "num_lines":  5}, {"number":  2, "num_lines":  3}]
+
+###
+
+GET http://localhost:9000/example/json?number=1&num_lines=5
+
+###
+
+POST http://localhost:9000/example-2/json
+Content-Type: application/json
+
+{"number":  1, "num_lines":  5}
+
+###
+
+GET http://localhost:9000/example-2/json?number=1&num_lines=5

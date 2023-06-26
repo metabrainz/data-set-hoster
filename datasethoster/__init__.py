@@ -1,7 +1,13 @@
 from abc import abstractmethod
+from typing import TypeVar, Generic, Type
+
+from pydantic import BaseModel
+
+QueryInT = TypeVar('QueryInT', bound=BaseModel)
+QueryOutT = TypeVar('QueryOutT', bound=BaseModel)
 
 
-class Query:
+class Query(Generic[QueryInT, QueryOutT]):
 
     def __init__(self):
         """ The constructor, override it if you need to. """
@@ -24,7 +30,7 @@ class Query:
         pass
 
     @abstractmethod
-    def inputs(self):
+    def inputs(self) -> Type[QueryInT]:
         """ return a list of text column names that are required inputs for this query.
             column names that are enclosed in [] indicates that the query expects a list,
             rather than a simple text argument
@@ -32,14 +38,14 @@ class Query:
         pass
 
     @abstractmethod
-    def outputs(self):
+    def outputs(self) -> Type[QueryOutT]:
         """ return a list of text column names that will be returned by the fetch function.
             return None if the outputs are dynamic and you want those to be inferred.
         """
         pass
 
     @abstractmethod
-    def fetch(self, params, offset=-1, limit=-1):
+    def fetch(self, params: QueryInT, offset=-1, limit=-1) -> QueryOutT:
         """
            Given the passed in parameters, the function should carry out more error checking
            on the arguments and then fetch the data needed. This function should
