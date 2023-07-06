@@ -1,10 +1,17 @@
 from abc import abstractmethod
+from enum import Enum
 from typing import TypeVar, Generic, Type
 
 from pydantic import BaseModel
 
 QueryInT = TypeVar('QueryInT', bound=BaseModel)
 QueryOutT = TypeVar('QueryOutT', bound=BaseModel)
+
+
+class RequestSource(Enum):
+    web = "web"
+    json_get = "json_get"
+    json_post = "json_post"
 
 
 class Query(Generic[QueryInT, QueryOutT]):
@@ -45,7 +52,7 @@ class Query(Generic[QueryInT, QueryOutT]):
         pass
 
     @abstractmethod
-    def fetch(self, params: QueryInT, offset=-1, limit=-1) -> QueryOutT:
+    def fetch(self, params: QueryInT, source: RequestSource, offset=-1, limit=-1) -> QueryOutT:
         """
            Given the passed in parameters, the function should carry out more error checking
            on the arguments and then fetch the data needed. This function should
