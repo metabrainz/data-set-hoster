@@ -12,7 +12,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
                                 MethodNotAllowed, ImATeapot, ServiceUnavailable
 
-from datasethoster import Query
+from datasethoster import Query, RequestSource
 from datasethoster.decorators import crossdomain
 from datasethoster.exceptions import RedirectError, QueryError
 
@@ -205,7 +205,7 @@ def web_query_handler():
     if request.args:
         try:
             inputs = [input_model(**request.args)]
-            results = query.fetch(inputs)
+            results = query.fetch(inputs, RequestSource.web)
         except RedirectError as red:
             return redirect(red.url)
         except Exception as err:
@@ -274,7 +274,7 @@ def json_query_handler_get():
         raise BadRequest(str(e))
 
     try:
-        data = query.fetch(inputs)
+        data = query.fetch(inputs, RequestSource.json_get)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
@@ -305,7 +305,7 @@ def json_query_handler_post():
     count = int(request.args.get('count', str(DEFAULT_QUERY_RESULT_SIZE)))
 
     try:
-        data = query.fetch(inputs, offset=offset, count=count)
+        data = query.fetch(inputs, RequestSource.json_post, offset=offset, count=count)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
