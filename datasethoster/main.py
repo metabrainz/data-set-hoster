@@ -1,6 +1,3 @@
-import copy
-import csv
-import io
 import json
 import os
 import traceback
@@ -9,12 +6,16 @@ from flask import Blueprint, Flask, render_template, request, jsonify, redirect,
 import sentry_sdk
 from pydantic import BaseModel
 from sentry_sdk.integrations.flask import FlaskIntegration
-from werkzeug.exceptions import NotFound, BadRequest, InternalServerError, \
-                                MethodNotAllowed, ImATeapot, ServiceUnavailable
+from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
-from datasethoster import Query, RequestSource
+from datasethoster import RequestSource
 from datasethoster.decorators import crossdomain
-from datasethoster.exceptions import RedirectError, QueryError
+from datasethoster.exceptions import RedirectError
+
+
+class QueryOutputWrapperModel(BaseModel):
+    __root__: list[BaseModel]
+
 
 DEFAULT_QUERY_RESULT_SIZE = 100
 TEMPLATE_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), "template")
@@ -84,78 +85,6 @@ def fetch_query(url):
         return None, "Requested query '%s' not hosted on this site." % slug
 
     return query, ""
-
-
-def convert_http_args_to_json(inputs, req_args, web_query):
-    """
-        This function converts a series of HTTP arguments into a sane JSON (dict)
-        that mimicks the data that is passed to the POST function. Also does
-        some error checking on the data.
-        If web_query is passed in, removes any leading and trailing space around
-        args.
-
-        Returns a complete dict or parameters and a blank string or None and an error string.
-    """
-
-    args = {}
-    list_len = -1
-    for arg, input in zip(req_args, inputs):
-        req_arg = req_args[arg].strip() if web_query else req_args[arg]
-        if input[0] == '[':
-            args[arg] = next(csv.reader(io.StringIO(req_arg)))
-        else:
-            args[arg] = [ req_arg ]
-        list_len = max(list_len, len(args[arg]))
-
-
-    singletons = {}
-    for arg in args:
-        if arg.startswith("[") and len(args[arg]) != list_len:
-            return [], "Lists passed as parameters must all be the same length."
-
-        if len(args[arg]) == 1:
-            singletons[arg] = args[arg][0]
-
-    arg_list = []
-    try:
-        for i in range(list_len):
-            row = copy.deepcopy(singletons)
-            for input in inputs:
-                if input not in args:
-                    return [], "Missing parameter '%s'." % input
-                if input not in singletons:
-                    row[input] = args[input][i]
-            arg_list.append(row)
-    except KeyError as err:
-        return [], "KeyError: " + str(err)
-
-    return arg_list, ""
-
-
-def error_check_arguments(inputs, req_json):
-    """
-        Given the JSON (dict) version of the parameters, ensure that they are sane.
-        Parameters must all be available for each row and parameters cannot be blank.
-        If there are parameters that are lists, make sure all lists contain
-        the same number of elements. Returns error string if error, otherwise empty string
-    """
-
-    if not req_json:
-        return "No parameters supplied. Required: %s" % (",".join(inputs))
-
-    for i, row in enumerate(req_json):
-        for input in inputs:
-            if not input in row:
-                return "Required parameter '%s' missing in row %d." % (input, i)
-            if not row[input]:
-                return "Required parameter '%s' cannot be blank in row %d." % (input, i)
-
-    # Examine one row to ensure that all the parameters are there.
-    for req in req_json[0]:
-        if req not in inputs:
-            return "Too many parameters passed. Extra: '%s'" % req
-
-    return ""
 
 
 def convert_results_to_outputs(results):
@@ -275,12 +204,13 @@ def json_query_handler_get():
 
     try:
         data = query.fetch(inputs, RequestSource.json_get)
+        result = QueryOutputWrapperModel(__root__=data)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({}), 500
 
-    return Response(json.dumps([x.dict() for x in data]), mimetype="application/json")
+    return Response(result.json(), mimetype="application/json")
 
 
 def json_query_handler_post():
@@ -306,9 +236,10 @@ def json_query_handler_post():
 
     try:
         data = query.fetch(inputs, RequestSource.json_post, offset=offset, count=count)
+        result = QueryOutputWrapperModel(__root__=data)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({"error": err}), 400
 
-    return Response(json.dumps([x.dict() for x in data]), mimetype="application/json")
+    return Response(result.json(), mimetype="application/json")

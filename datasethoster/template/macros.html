@@ -52,7 +52,7 @@
               <td>{{ link_mb('release-group', row[column]) }}</td>
             {% elif column.endswith("artist_mbid") %}
               <td>{{ link_mb('artist', row[column]) }}</td>
-            {% elif column.endswith("[artist_credit_mbids]") and row[column] is iterable %}
+            {% elif column.endswith("artist_credit_mbids") and row[column] is iterable %}
               <td>
                 {% for v in row[column] %}
                   {{ link_mb('artist', v) }}
