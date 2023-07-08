@@ -14,6 +14,10 @@ class RequestSource(Enum):
     json_post = "json_post"
 
 
+class QueryOutputLine(BaseModel):
+    line: str
+
+
 class Query(Generic[QueryInT, QueryOutT]):
 
     def __init__(self):
