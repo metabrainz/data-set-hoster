@@ -34,7 +34,7 @@
     {% if result.type == "markup" %}
       {{ result.data|safe }}
     {% elif result.type == "dataset" %}
-      {{ format_output(result) }}
+      {{ format_output(result, additional_data) }}
     {% else %}
       <p><b>INVALID OUTPUT TYPE: PLEASE FIX! (RENDERING AS IS FOR NOW)</b></p>
       {{ result }}
