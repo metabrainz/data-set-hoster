@@ -15,8 +15,10 @@
       {% set recording_mbids = output.data[:50] | selectattr('recording_mbid') | join(',', 'recording_mbid') %}
       {% if recording_mbids %}
         <div style="float: right">
-          <a class="button" target="_blank" rel="noopener noreferrer"
-             href="https://listenbrainz.org/player/?recording_mbids={{ recording_mbids }}">
+          <a class="button"
+             target="_blank"
+             rel="noopener noreferrer"
+             href="https://listenbrainz.org/player/?recording_mbids={{ recording_mbids }}&desc={{ additional_data['playlist_desc'] | urlencode }}&name={{ additional_data['playlist_name'] | urlencode }}">
             Open results as a playlist
           </a>
         </div>

@@ -175,6 +175,7 @@ def web_query_handler():
     introduction = query.introduction()
     inputs = query.inputs()
     outputs = query.outputs()
+    other_data = query.other_data()
 
     results = []
     json_post = ""
@@ -220,7 +221,8 @@ def web_query_handler():
         desc=desc,
         slug=slug,
         json_url=json_url,
-        json_post=json_post
+        json_post=json_post,
+        additional_data=query.additional_data()
     )
 
 

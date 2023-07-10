@@ -50,3 +50,12 @@ class Query:
            and the text is correctly displayed as an error on the web page.
         """
         pass
+
+    def additional_data(self):
+        """ return a dict of data that can provide hints to the dataset hoster.
+
+            Supported keys:
+                playlist_name: the name of the playlist, should the user want to save the result data as a playlist.
+                playlist_desc: the desc of the playlist, should the user want to save the result data as a playlist.
+        """
+        return {}
