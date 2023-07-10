@@ -9,7 +9,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro format_output(output) %}
+{% macro format_output(output, additional_data) %}
   {% if output %}
     {% if "recording_mbid" in output.columns %}
       {% set recording_mbids = output.data[:50] | selectattr('recording_mbid') | join(',', 'recording_mbid') %}
