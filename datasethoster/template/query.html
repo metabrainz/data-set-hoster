@@ -6,7 +6,7 @@
 <h2><a href="/">Dataset Hoster</a> : {{ slug }}</h2>
 <h4>{{ desc }}</h4>
 <p>
-   {{ introduction }}
+   {{ introduction | safe }}
    (<a href="{{ json_url }}">JSON version</a> {% if json_post %}and <a href="#json-post">JSON POST data</a>{% endif %})
 </p>
 
