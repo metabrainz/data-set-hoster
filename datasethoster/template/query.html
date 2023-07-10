@@ -32,7 +32,7 @@
 <div>
   {% for result in results %}
     {% if result.type == "markup" %}
-      {{ result.data }}
+      {{ result.data|safe }}
     {% elif result.type == "dataset" %}
       {{ format_output(result) }}
     {% else %}
