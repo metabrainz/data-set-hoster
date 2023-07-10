@@ -210,7 +210,6 @@ def web_query_handler():
                 sentry_sdk.capture_exception(err)
 
     json_url = request.url.replace(slug, slug + "/json")
-    print(query.additional_data())
     return render_template(
         "query.html",
         error=error,
