@@ -32,7 +32,13 @@
 
 <div>
   {% for result in results %}
-    {{ format_output(result, additional_data) }}
+    {% if result["no_table"] %}
+      {% for row in result["data"] %}
+        {{ row["line"] }}
+      {% endfor %}
+    {% else %}
+      {{ format_output(result, additional_data) }}
+    {% endif %}
   {% endfor %}
 
   {% if json_post %}
