@@ -1,6 +1,6 @@
-import json
 import os
 import traceback
+from datetime import datetime
 
 from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
 import sentry_sdk
@@ -30,6 +30,7 @@ dataset_bp = Blueprint('dataset_hoster', __name__, template_folder=TEMPLATE_FOLD
 def create_app(config_file=None):
     """Create a flask app and optionally load a config file and initialise sentry"""
     app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
+    app.jinja_env.tests["datetime_field"] = lambda f: f.type_ == datetime
     app.register_blueprint(dataset_bp)
     if config_file:
         app.config.from_object(config_file)
@@ -152,7 +153,7 @@ def web_query_handler():
     return render_template(
         "query.html",
         error=error,
-        inputs=input_keys,
+        fields=input_model.__fields__.values(),
         results=outputs,
         introduction=introduction,
         args=request.args,
