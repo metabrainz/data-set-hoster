@@ -11,12 +11,13 @@
 </p>
 
 <form action="/{{ slug }}">
-  {% for input in inputs %}
+  {% for field in fields %}
+     {% set input = field.name %}
      <label for="{{ input }}">{{ input }}</label>
-     <input type="text"
+     <input type="{% if field is datetime_field %}datetime-local{% else %}text{% endif %}"
             id="{{ input }}"
             name="{{ input }}"
-            placeholder="{% if input[0] == '[' %}list of items{% else %}single value{% endif %}"
+            placeholder="single value"
             value="{{args[input] | escape }}"><br>
   {% endfor %}
   <input type="submit" value="run query">
