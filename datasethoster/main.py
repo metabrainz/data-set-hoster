@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
-from datasethoster import RequestSource
+from datasethoster import RequestSource, QueryOutputLine
 from datasethoster.decorators import crossdomain
 from datasethoster.exceptions import RedirectError
 
@@ -93,20 +93,27 @@ def convert_results_to_outputs(results):
         return []
 
     outputs = []
-    last_keys = results[0].__fields__.keys()
-    last_output = []
+    last_result, last_keys, last_output = results[0], results[0].__fields__.keys(), []
     for result in results:
         current_keys = result.__fields__.keys()
 
         if current_keys != last_keys:
-            outputs.append({"columns": last_keys, "data": last_output})
-            last_keys = current_keys
-            last_output = []
+            outputs.append({
+                "columns": last_keys,
+                "data": last_output,
+                "no_table": isinstance(last_result, QueryOutputLine)
+            })
+            last_keys, last_output = current_keys, []
 
+        last_result = result
         last_output.append(result.dict())
 
-    if last_keys and last_output:
-        outputs.append({"columns": last_keys, "data": last_output})
+    if last_result and last_keys and last_output:
+        outputs.append({
+            "columns": last_keys,
+            "data": last_output,
+            "no_table": isinstance(last_result, QueryOutputLine)
+        })
 
     return outputs
 
@@ -145,10 +152,7 @@ def web_query_handler():
 
         outputs = convert_results_to_outputs(results)
 
-        input_args = inputs[0].dict()
-        json_post = json.dumps([input_args], indent=4)
-
-    input_keys = input_model.__fields__.keys()
+        json_post = QueryOutputWrapperModel(__root__=inputs).json(indent=4)
 
     return render_template(
         "query.html",
