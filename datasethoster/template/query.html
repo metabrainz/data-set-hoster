@@ -12,13 +12,25 @@
 
 <form action="/{{ slug }}">
   {% for field in fields %}
-     {% set input = field.name %}
-     <label for="{{ input }}">{{ input }}</label>
-     <input type="{% if field is datetime_field %}datetime-local{% else %}text{% endif %}"
-            id="{{ input }}"
-            name="{{ input }}"
-            placeholder="single value"
-            value="{{args[input] | escape }}"><br>
+    {% set input = field.name %}
+    <label for="{{ input }}">{{ input }}</label>
+    {% if field is select_field %}
+      <select id="{{ input }}" name="{{ input }}">
+      {% for option in field.type_ | list %}
+        {% set choice = option.value %}
+        <option id="{{ choice }}" name="{{ choice }}" {% if choice == args[input] %}selected{% endif %}>
+          {{ choice }}
+        </option>
+      {% endfor %}
+      </select>
+    {% else %}
+      <input type="{% if field is datetime_field %}datetime-local{% else %}text{% endif %}"
+             id="{{ input }}"
+             name="{{ input }}"
+             placeholder="single value"
+             value="{{args[input] | escape }}">
+    {% endif %}
+    <br />
   {% endfor %}
   <input type="submit" value="run query">
 </form>

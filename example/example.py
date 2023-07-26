@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-from typing import List, Union
+import json
+from datetime import datetime
+from enum import Enum
+from typing import List, Union, Optional
+from uuid import UUID
 
+from markupsafe import Markup
 from pydantic import BaseModel
 
-from datasethoster import Query
-
-
-class ExampleInput(BaseModel):
-    number: int
-    num_lines: int
+from datasethoster import Query, RequestSource, QueryOutputLine
 
 
 class ExampleOutput(BaseModel):
-    number1: int
-    multiplied: int
+    number: int
+    num_lines: int
+    x: str
 
 
-class ExampleQuery(Query[ExampleInput, ExampleOutput]):
+class ExampleQuery(Query[BaseModel, ExampleOutput]):
 
     def setup(self):
         pass
@@ -28,12 +29,19 @@ class ExampleQuery(Query[ExampleInput, ExampleOutput]):
         return """This is the introduction, which could provide more useful info that this introduction does."""
 
     def inputs(self):
+        X = Enum("X", {"foo": "foo", "bar": "bar"})
+
+        class ExampleInput(BaseModel):
+            number: int
+            num_lines: datetime
+            x: X
+
         return ExampleInput
 
     def outputs(self):
         return ExampleOutput
 
-    def fetch(self, params: List[ExampleInput], offset=-1, count=-1) -> List[ExampleOutput]:
+    def fetch(self, params: list, source, offset=-1, count=-1) -> List[ExampleOutput]:
         print(params)
         data = []
         for param in params:
@@ -41,7 +49,8 @@ class ExampleQuery(Query[ExampleInput, ExampleOutput]):
             for i in range(1, param.num_lines + 1):
                 data.append({
                     'number': i,
-                    'multiplied': i * number
+                    'multiplied': i * number,
+                    'option': param.x
                 })
-        outputs = [ExampleOutput(number1=x["number"], multiplied=x["multiplied"]) for x in data]
+        outputs = [ExampleOutput(number1=x["number"], multiplied=x["multiplied"], x=x["option"]) for x in data]
         return outputs
