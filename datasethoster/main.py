@@ -1,6 +1,7 @@
 import os
 import traceback
 from datetime import datetime
+from enum import Enum
 
 from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
 import sentry_sdk
@@ -31,6 +32,7 @@ def create_app(config_file=None):
     """Create a flask app and optionally load a config file and initialise sentry"""
     app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
     app.jinja_env.tests["datetime_field"] = lambda f: f.type_ == datetime
+    app.jinja_env.tests["select_field"] = lambda f: issubclass(f.type_, Enum)
     app.register_blueprint(dataset_bp)
     if config_file:
         app.config.from_object(config_file)
