@@ -58,4 +58,4 @@ class Query:
                 playlist_name: the name of the playlist, should the user want to save the result data as a playlist.
                 playlist_desc: the desc of the playlist, should the user want to save the result data as a playlist.
         """
-        return {}
+        return {"name": "Instant Playlist", "desc": "Instant Playlist"}
