@@ -1,6 +1,75 @@
 {%- extends 'base.html' -%}
 {%- from 'macros.html' import format_output -%}
 {%- block title -%}{{ slug }}{% endblock %}
+{% block styles %}
+  {{ super() }}
+  <style>
+  .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f1f1f1;
+      min-width: 160px;
+      overflow: auto;
+      box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+      z-index: 1;
+  }
+
+  .dropdown-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+  }
+
+  .dropdown a:hover {
+      background-color: #ddd;
+      display: inline-block;
+  }
+
+  .show {
+      display: block;
+  }
+
+  .item-container {
+      display: flex;
+      justify-content: space-between;
+  }
+
+  .item-content {
+      margin-bottom: auto;
+      margin-top: auto;
+  }
+
+  .arrow {
+      width: 13px;
+      height: 13px;
+      display: inline-block;
+      position: relative;
+      bottom: -5px;
+      left: -10px;
+      transition: 0.4s ease;
+      margin-top: 2px;
+      text-align: left;
+      transform: rotate(45deg);
+      float: right;
+  }
+  .arrow:before, .arrow:after {
+      position: absolute;
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 3px;
+      background-color: #fff;
+      transition: 0.4s ease;
+  }
+  .arrow:after {
+      position: absolute;
+      transform: rotate(90deg);
+      top: -5px;
+      left: 5px;
+  }
+  </style>
+{% endblock %}
 {%- block content -%}
 
 <h2><a href="/">Dataset Hoster</a> : {{ slug }}</h2>
@@ -66,4 +135,18 @@
 {% endblock %}
 
 {% block scripts %}
+  {{ super() }}
+  <script>
+    /* When the user clicks on the button, toggle between hiding and showing the dropdown content */
+    function toggleDropdown(dropdown_id) {
+        document.getElementById(dropdown_id).querySelector(".dropdown-content").classList.toggle("show");
+    }
+    document.addEventListener("click", (event) => {
+        console.log(event.target);
+        if(event.target.closest(".dropdown")) return;
+        for (const element of document.querySelectorAll(".dropdown-content")) {
+            element.classList.remove("show");
+        }
+    })
+  </script>
 {% endblock %}

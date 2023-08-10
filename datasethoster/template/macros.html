@@ -9,6 +9,44 @@
   {% endif %}
 {% endmacro %}
 
+{% macro format_column(row, column) %}
+  {% if column.endswith("recording_mbid") or column.endswith("recording_id") %}
+    {{ link_mb('recording', row[column]) }}
+  {% elif column.endswith("release_mbid") or column.endswith("release_id") %}
+    {{ link_mb('release', row[column]) }}
+  {% elif column.endswith("release_group_mbid") or column.endswith("release_group_id") %}
+    {{ link_mb('release-group', row[column]) }}
+  {% elif column.endswith("artist_mbid") %}
+    {{ link_mb('artist', row[column]) }}
+  {% elif column.endswith("artist_credit_mbids") and row[column] is iterable %}
+    {% for v in row[column] %}
+      {{ link_mb('artist', v) }}
+    {% endfor %}
+  {% elif column.endswith("_json") %}
+    <pre>{{ row[column] }}</pre>
+  {% elif row[column] is iterable and row[column] is not string %}
+    {% for v in row[column] %}
+      {{ v }}
+    {% endfor %}
+  {% else %}
+    {{ row[column] }}
+  {% endif %}
+{% endmacro %}
+
+{% macro format_dropdown(row_idx, col_idx, column, links) %}
+  {% set dropdown_id = "" %}
+  <div id="dropdown-{{ column }}-{{ row_idx }}-{{ col_idx }}" class="dropdown">
+    <button onclick="toggleDropdown('dropdown-{{ column }}-{{ row_idx }}-{{ col_idx }}')" class="dropdown_button">
+      <span class="arrow"></span>
+    </button>
+    <div class="dropdown-content">
+      {% for name, url in links %}
+        <a href="{{ url }}">{{ name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
 {% macro format_output(output, additional_data) %}
   {% if output %}
     {% if "recording_mbid" in output.columns %}
@@ -41,36 +79,18 @@
       </tr>
       </thead>
       <tbody>
-      {% for row in output.data %}
+      {% for row, links in output.data|zip(output.links) %}
         <tr>
+          {% set rowloop = loop %}
           {% for column in output.columns %}
-            {% if column.endswith("recording_mbid") or column.endswith("recording_id") %}
-              <td>{{ link_mb('recording', row[column]) }}</td>
-            {% elif column.endswith("release_mbid") or column.endswith("release_id") %}
-              <td>{{ link_mb('release', row[column]) }}</td>
-            {% elif column.endswith("release_group_mbid") or column.endswith("release_group_id") %}
-              <td>{{ link_mb('release-group', row[column]) }}</td>
-            {% elif column.endswith("artist_mbid") %}
-              <td>{{ link_mb('artist', row[column]) }}</td>
-            {% elif column.endswith("artist_credit_mbids") and row[column] is iterable %}
-              <td>
-                {% for v in row[column] %}
-                  {{ link_mb('artist', v) }}
-                {% endfor %}
-              </td>
-            {% elif column.endswith("_json") %}
-              <td>
-                <pre>{{ row[column] }}</pre>
-              </td>
-            {% elif row[column] is iterable and row[column] is not string %}
-              <td>
-                {% for v in row[column] %}
-                  {{ v }}
-                {% endfor %}
-              </td>
-            {% else %}
-              <td>{{ row[column] }}</td>
-            {% endif %}
+            <td>
+              <div class="item-container">
+                <div class="item-content">{{ format_column(row, column) }}</div>
+                {% if links.get(column) %}
+                  {{ format_dropdown(rowloop.index, loop.index, column, links.get(column)) }}
+                {% endif %}
+              </div>
+            </td>
           {% endfor %}
         </tr>
       {% endfor %}

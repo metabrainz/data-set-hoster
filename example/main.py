@@ -1,8 +1,9 @@
 from datasethoster.main import create_app, register_query
 
-from example import ExampleQuery
+from example import ExampleQuery, ExampleQuery2
 
 register_query(ExampleQuery())
+register_query(ExampleQuery2())
 
 # Needs to be after register_query
 app = create_app('config')

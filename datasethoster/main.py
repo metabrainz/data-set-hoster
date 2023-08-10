@@ -1,10 +1,12 @@
 import os
 import traceback
+from collections import defaultdict
 from datetime import datetime
 from enum import Enum
+from urllib.parse import urlencode
 
-from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
 import sentry_sdk
+from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
 from pydantic import BaseModel
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
@@ -33,6 +35,7 @@ def create_app(config_file=None):
     app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
     app.jinja_env.tests["datetime_field"] = lambda f: f.type_ == datetime
     app.jinja_env.tests["select_field"] = lambda f: issubclass(f.type_, Enum)
+    app.jinja_env.filters["zip"] = zip
     app.register_blueprint(dataset_bp)
     if config_file:
         app.config.from_object(config_file)
@@ -90,34 +93,70 @@ def fetch_query(url):
     return query, ""
 
 
-def convert_results_to_outputs(results):
+def fetch_matching_queries(columns: list[str]):
+    """ Retrieve queries one of whose input names matches the given column name """
+    columns = set(columns)
+    matches = []
+    for query in registered_queries.values():
+        input_model = query.inputs()
+        inputs = set(input_model.__fields__.keys())
+        matching_columns = columns.intersection(inputs)
+        if matching_columns:
+            matches.append((query, matching_columns))
+    return matches
+
+
+def get_links_for_output(columns, data):
+    """ Generate links to launch other queries for each output item in the data """
+    matches = fetch_matching_queries(columns)
+    urls = []
+    for row in data:
+        row_urls = defaultdict(list)
+        for (query, columns) in matches:
+            slug, name = query.names()
+            params = {column: row[column] for column in columns}
+            params["dryrun"] = True
+            url = f"{slug}?{urlencode(params)}"
+            for column in columns:
+                row_urls[column].append((name, url))
+        urls.append(row_urls)
+    return urls
+
+
+def convert_result_group_to_output(groups: list[tuple[list[str], list[BaseModel]]]):
+    """ Convert the result columns and data into an output group by adding similar urls if any """
+    outputs = []
+    for columns, values in groups:
+        output = {
+            "columns": columns,
+            "data": [x.dict() for x in values],
+            "no_table": isinstance(values[0], QueryOutputLine)
+        }
+        if not output["no_table"]:
+            output["links"] = get_links_for_output(output["columns"], output["data"])
+        outputs.append(output)
+    return outputs
+
+
+def group_results(results):
+    """ Create groups, consecutive outputs till their column list doesn't change, from results """
     if not results:
         return []
 
-    outputs = []
-    last_result, last_keys, last_output = results[0], results[0].__fields__.keys(), []
+    groups = []
+    last_result, last_keys, last_group = results[0], results[0].__fields__.keys(), []
     for result in results:
         current_keys = result.__fields__.keys()
-
         if current_keys != last_keys:
-            outputs.append({
-                "columns": last_keys,
-                "data": last_output,
-                "no_table": isinstance(last_result, QueryOutputLine)
-            })
-            last_keys, last_output = current_keys, []
-
+            groups.append((last_keys, last_group))
+            last_keys, last_group = current_keys, []
         last_result = result
-        last_output.append(result.dict())
+        last_group.append(result)
 
-    if last_result and last_keys and last_output:
-        outputs.append({
-            "columns": last_keys,
-            "data": last_output,
-            "no_table": isinstance(last_result, QueryOutputLine)
-        })
+    if last_result and last_keys and last_group:
+        groups.append((last_keys, last_group))
 
-    return outputs
+    return groups
 
 
 def web_query_handler():
@@ -133,6 +172,7 @@ def web_query_handler():
     count = int(request.args.get('count', "-1"))
     if offset >= 0 or count >= 0:
         return render_template("error.html", error="offset and count arguments are only supported for the POST method")
+    dryrun = request.args.get("dryrun", None)
 
     slug, desc = query.names()
     introduction = query.introduction()
@@ -141,7 +181,7 @@ def web_query_handler():
 
     outputs = []
     json_post = ""
-    if request.args:
+    if request.args and not dryrun:
         try:
             inputs = [input_model(**request.args)]
             results = query.fetch(inputs, RequestSource.web)
@@ -152,7 +192,8 @@ def web_query_handler():
             sentry_sdk.capture_exception(err)
             return render_template("error.html", error=error)
 
-        outputs = convert_results_to_outputs(results)
+        groups = group_results(results)
+        outputs = convert_result_group_to_output(groups)
 
         json_post = QueryOutputWrapperModel(__root__=inputs).json(indent=4)
 
