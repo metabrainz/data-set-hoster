@@ -33,7 +33,7 @@ class ExampleQuery(Query[BaseModel, ExampleOutput]):
 
         class ExampleInput(BaseModel):
             number: int
-            num_lines: datetime
+            num_lines: int
             x: X
 
         return ExampleInput
@@ -52,5 +52,5 @@ class ExampleQuery(Query[BaseModel, ExampleOutput]):
                     'multiplied': i * number,
                     'option': param.x
                 })
-        outputs = [ExampleOutput(number1=x["number"], multiplied=x["multiplied"], x=x["option"]) for x in data]
+        outputs = [ExampleOutput(number=x["number"], num_lines=x["multiplied"], x=x["option"].value) for x in data]
         return outputs
