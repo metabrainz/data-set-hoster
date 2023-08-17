@@ -8,7 +8,9 @@ from urllib.parse import urlencode
 import sentry_sdk
 from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
 from pydantic import BaseModel
+from pydantic.fields import ModelField, SHAPE_NAME_LOOKUP
 from sentry_sdk.integrations.flask import FlaskIntegration
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from datasethoster import RequestSource, QueryOutputLine
@@ -159,6 +161,27 @@ def group_results(results):
     return groups
 
 
+def convert_args_to_input(input_model: BaseModel, arguments: MultiDict):
+    """ Convert the request arguments (query parameters) to input for passing to query. """
+    params = {}
+    for key, values in arguments.lists():
+        # user submitted multiple values for query parameter pass all to field in all cases, model will raise
+        # a ValidationError in case of mismatch
+        if len(values) > 1:
+            params[key] = values
+        else:
+            # user submitted only one value, check if the model expects a list or a single value
+            # and coerce it accordingly
+            field = input_model.__fields__.get(key)
+
+            # iterable/list expecting shapes are present in SHAPE_NAME_LOOKUP dict in pydantic
+            if field is not None and field.shape in SHAPE_NAME_LOOKUP:
+                params[key] = values
+            else:
+                params[key] = values[0]
+    return params
+
+
 def web_query_handler():
     """
         This is the view handler for the web page. It is more complex because of all
@@ -183,7 +206,8 @@ def web_query_handler():
     json_post = ""
     if request.args and not dryrun:
         try:
-            inputs = [input_model(**request.args)]
+            params = convert_args_to_input(input_model, request.args)
+            inputs = [input_model(**params)]
             results = query.fetch(inputs, RequestSource.web)
         except RedirectError as red:
             return redirect(red.url)
@@ -246,7 +270,8 @@ def json_query_handler_get():
     input_model = query.inputs()
 
     try:
-        inputs = [input_model(**request.args)]
+        params = convert_args_to_input(input_model, request.args)
+        inputs = [input_model(**params)]
     except Exception as e:
         raise BadRequest(str(e))
 
