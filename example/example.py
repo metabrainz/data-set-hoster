@@ -14,8 +14,9 @@ class ExampleOutput(BaseModel):
 
 
 class ExampleInput2(BaseModel):
-    number: int
+    number: list[int]
     multiplied: int
+
 
 class ExampleOutput2(BaseModel):
     number: int
@@ -56,7 +57,7 @@ class ExampleQuery(Query[BaseModel, ExampleOutput]):
                     'multiplied': i * number,
                     'option': param.x
                 })
-        outputs = [ExampleOutput(number=x["number"], num_lines=x["multiplied"], x=x["option"].value) for x in data]
+        outputs = [ExampleOutput(number=x["number"], multiplied=x["multiplied"]) for x in data]
         return outputs
 
 
@@ -80,11 +81,11 @@ class ExampleQuery2(Query[ExampleInput2, ExampleOutput2]):
     def fetch(self, params: List[ExampleInput2], source, offset=-1, count=-1) -> List[ExampleOutput2]:
         data = []
         for param in params:
-            number = param.number
-            for i in range(1, param.multiplied + 1):
-                data.append({
-                    'number': i,
-                    'added': i + number
-                })
+            for number in param.number:
+                for i in range(1, param.multiplied + 1):
+                    data.append({
+                        'number': i,
+                        'added': i + number
+                    })
         outputs = [ExampleOutput2(number=x["number"], added=x["added"]) for x in data]
         return outputs
