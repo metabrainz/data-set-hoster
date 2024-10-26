@@ -6,4 +6,4 @@ sentry-sdk[flask]==0.19.3
 six==1.16.0
 setuptools==70.0.0
 pydantic==1.10.13
-Werkzeug==3.0.3
+Werkzeug==3.0.6
