@@ -1,88 +1,89 @@
-import os
 import unittest
-from unittest.mock import patch
+from typing import List
 
-from datasethoster.main import register_query, convert_http_args_to_json, error_check_arguments
+from pydantic import BaseModel
+from werkzeug.datastructures import MultiDict
 
-class TestMain(unittest.TestCase):
+from datasethoster.main import convert_args_to_input, group_results
 
-    def test_convert_http_args_to_json(self):
 
-        inputs = ['in_0', '[in_1]']
-        req_args = {
-            'in_0': ' value0  ',
-            '[in_1]': 'value1,value2'
-        }
-        args, error = convert_http_args_to_json(inputs, req_args, True)
-        self.assertEqual(error, "")
-        self.assertEqual(len(args), 2)
-        self.assertEqual(args[0]['in_0'], 'value0')
-        self.assertEqual(args[0]['[in_1]'], 'value1')
-        self.assertEqual(args[1]['in_0'], 'value0')
-        self.assertEqual(args[1]['[in_1]'], 'value2')
+class SampleInput(BaseModel):
+    artist: str
+    recording_mbids: List[str]
 
-        req_args = {
-            'in_0': ' value0 ',
-            '[in_1]': 'value1'
-        }
 
-        args, error = convert_http_args_to_json(inputs, req_args, False)
-        self.assertEqual(error, "")
-        self.assertEqual(args[0]['in_0'], ' value0 ')
-        self.assertEqual(args[0]['[in_1]'], 'value1')
+class SampleOutputA(BaseModel):
+    name: str
+    count: int
 
-        req_args = {
-            '[in_1]': 'value1,value2'
-        }
-        args, error = convert_http_args_to_json(inputs, req_args, True)
-        self.assertEqual(error, "Missing parameter 'in_0'.")
-    
-        req_args = {
-            '[in_6]': 'value1,value2'
-        }
-        args, error = convert_http_args_to_json(inputs, req_args, True)
-        self.assertEqual(error, "Missing parameter 'in_0'.")
 
-        inputs = ['in_0', '[in_1]', '[in_2]']
-        req_args = {
-            'in_0': 'value0',
-            '[in_1]': 'value1,value2',
-            '[in_2]': 'value1'
-        }
-        args, error = convert_http_args_to_json(inputs, req_args, True)
-        self.assertEqual(error, "Lists passed as parameters must all be the same length.")
+class SampleOutputB(BaseModel):
+    title: str
 
-    def test_error_check_arguments(self):
-        inputs = ['in_0', '[in_1]']
-        req_args = [ {
-               'in_0': 'value0',
-               '[in_1]': ['value1','value3']
-            }, {
-               'in_0': 'value2',
-               '[in_1]': ['value5','value7']
-            }
+
+class TestConvertArgsToInput(unittest.TestCase):
+
+    def test_scalar_field(self):
+        args = MultiDict([('artist', 'Beatles')])
+        params = convert_args_to_input(SampleInput, args)
+        self.assertEqual(params['artist'], 'Beatles')
+
+    def test_list_field_single_value_is_wrapped(self):
+        args = MultiDict([('recording_mbids', 'abc123')])
+        params = convert_args_to_input(SampleInput, args)
+        self.assertEqual(params['recording_mbids'], ['abc123'])
+
+    def test_list_field_multiple_values(self):
+        args = MultiDict([('recording_mbids', 'abc'), ('recording_mbids', 'def')])
+        params = convert_args_to_input(SampleInput, args)
+        self.assertEqual(params['recording_mbids'], ['abc', 'def'])
+
+    def test_unknown_field_passes_through_as_scalar(self):
+        args = MultiDict([('unknown', 'value')])
+        params = convert_args_to_input(SampleInput, args)
+        self.assertEqual(params['unknown'], 'value')
+
+    def test_multiple_fields(self):
+        args = MultiDict([('artist', 'Beatles'), ('recording_mbids', 'abc'), ('recording_mbids', 'def')])
+        params = convert_args_to_input(SampleInput, args)
+        self.assertEqual(params['artist'], 'Beatles')
+        self.assertEqual(params['recording_mbids'], ['abc', 'def'])
+
+
+class TestGroupResults(unittest.TestCase):
+
+    def test_empty(self):
+        self.assertEqual(group_results([]), [])
+
+    def test_single_type(self):
+        results = [SampleOutputA(name='x', count=1), SampleOutputA(name='y', count=2)]
+        groups = group_results(results)
+        self.assertEqual(len(groups), 1)
+        keys, items = groups[0]
+        self.assertEqual(list(keys), ['name', 'count'])
+        self.assertEqual(len(items), 2)
+
+    def test_mixed_types_creates_two_groups(self):
+        results = [
+            SampleOutputA(name='x', count=1),
+            SampleOutputB(title='t'),
         ]
-        error = error_check_arguments(inputs, req_args)
-        self.assertEqual(error, "")
-        
-        req_args = [ {
-               'in_0': 'value0',
-               '[in_1]': ['value1','value3']
-            }, {
-               'in_0': 'value2',
-               'in_1': ['value5','value7']
-            }
-        ]
-        error = error_check_arguments(inputs, req_args)
-        self.assertEqual(error, "Required parameter '[in_1]' missing in row 1.")
+        groups = group_results(results)
+        self.assertEqual(len(groups), 2)
+        keys_a, items_a = groups[0]
+        keys_b, items_b = groups[1]
+        self.assertEqual(list(keys_a), ['name', 'count'])
+        self.assertEqual(list(keys_b), ['title'])
 
-        req_args = [ {
-               'in_0': 'value0',
-               '[in_1]': ['value1','value3']
-            }, {
-               'in_0': '',
-               'in_1': ['value5','value7']
-            }
+    def test_interleaved_types_creates_multiple_groups(self):
+        results = [
+            SampleOutputA(name='a', count=1),
+            SampleOutputA(name='b', count=2),
+            SampleOutputB(title='t1'),
+            SampleOutputA(name='c', count=3),
         ]
-        error = error_check_arguments(inputs, req_args)
-        self.assertEqual(error, "Required parameter 'in_0' cannot be blank in row 1.")
+        groups = group_results(results)
+        self.assertEqual(len(groups), 3)
+        self.assertEqual(len(groups[0][1]), 2)
+        self.assertEqual(len(groups[1][1]), 1)
+        self.assertEqual(len(groups[2][1]), 1)

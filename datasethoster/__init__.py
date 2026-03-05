@@ -56,7 +56,7 @@ class Query(Generic[QueryInT, QueryOutT]):
         pass
 
     @abstractmethod
-    def fetch(self, params: QueryInT, source: RequestSource, offset=-1, limit=-1) -> QueryOutT:
+    def fetch(self, params: QueryInT, source: RequestSource, offset=0, count=-1) -> QueryOutT:
         """
            Given the passed in parameters, the function should carry out more error checking
            on the arguments and then fetch the data needed. This function should

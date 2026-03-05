@@ -1,14 +1,16 @@
 import os
 import traceback
+import typing
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
+from types import SimpleNamespace
+from typing import Any
 from urllib.parse import urlencode
 
 import sentry_sdk
 from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
-from pydantic import BaseModel
-from pydantic.fields import ModelField, SHAPE_NAME_LOOKUP
+from pydantic import BaseModel, RootModel
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
@@ -18,8 +20,8 @@ from datasethoster.decorators import crossdomain
 from datasethoster.exceptions import RedirectError
 
 
-class QueryOutputWrapperModel(BaseModel):
-    __root__: list[BaseModel]
+class QueryOutputWrapperModel(RootModel[list[Any]]):
+    pass
 
 
 DEFAULT_QUERY_RESULT_SIZE = 100
@@ -36,7 +38,7 @@ def create_app(config_file=None):
     """Create a flask app and optionally load a config file and initialise sentry"""
     app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
     app.jinja_env.tests["datetime_field"] = lambda f: f.type_ == datetime
-    app.jinja_env.tests["select_field"] = lambda f: issubclass(f.type_, Enum)
+    app.jinja_env.tests["select_field"] = lambda f: isinstance(f.type_, type) and issubclass(f.type_, Enum)
     app.jinja_env.filters["zip"] = zip
     app.register_blueprint(dataset_bp)
     if config_file:
@@ -81,7 +83,7 @@ def page_not_found(e):
 
 
 def fetch_query(url):
-    """ 
+    """
         Helper function to lookup and return a query object. Return None and error string
         if not query is found. Otherwise query and an empty error string.
     """
@@ -101,7 +103,7 @@ def fetch_matching_queries(columns: list[str]):
     matches = []
     for query in registered_queries.values():
         input_model = query.inputs()
-        inputs = set(input_model.__fields__.keys())
+        inputs = set(input_model.model_fields.keys())
         matching_columns = columns.intersection(inputs)
         if matching_columns:
             matches.append((query, matching_columns))
@@ -131,7 +133,7 @@ def convert_result_group_to_output(groups: list[tuple[list[str], list[BaseModel]
     for columns, values in groups:
         output = {
             "columns": columns,
-            "data": [x.dict() for x in values],
+            "data": [x.model_dump() for x in values],
             "no_table": isinstance(values[0], QueryOutputLine)
         }
         if not output["no_table"]:
@@ -146,9 +148,9 @@ def group_results(results):
         return []
 
     groups = []
-    last_result, last_keys, last_group = results[0], results[0].__fields__.keys(), []
+    last_result, last_keys, last_group = results[0], type(results[0]).model_fields.keys(), []
     for result in results:
-        current_keys = result.__fields__.keys()
+        current_keys = type(result).model_fields.keys()
         if current_keys != last_keys:
             groups.append((last_keys, last_group))
             last_keys, last_group = current_keys, []
@@ -159,6 +161,16 @@ def group_results(results):
         groups.append((last_keys, last_group))
 
     return groups
+
+
+def _get_raw_type(annotation):
+    """Unwrap Optional/Union to get the base type for Jinja template type checks."""
+    origin = typing.get_origin(annotation)
+    if origin is typing.Union:
+        args = [a for a in typing.get_args(annotation) if a is not type(None)]
+        if args:
+            return args[0]
+    return annotation
 
 
 def convert_args_to_input(input_model: BaseModel, arguments: MultiDict):
@@ -172,11 +184,15 @@ def convert_args_to_input(input_model: BaseModel, arguments: MultiDict):
         else:
             # user submitted only one value, check if the model expects a list or a single value
             # and coerce it accordingly
-            field = input_model.__fields__.get(key)
+            field_info = input_model.model_fields.get(key)
 
-            # iterable/list expecting shapes are present in SHAPE_NAME_LOOKUP dict in pydantic
-            if field is not None and field.shape in SHAPE_NAME_LOOKUP:
-                params[key] = values
+            # check if the field annotation is a list/sequence type
+            if field_info is not None:
+                origin = typing.get_origin(field_info.annotation)
+                if origin in (list, tuple, set, frozenset):
+                    params[key] = values
+                else:
+                    params[key] = values[0]
             else:
                 params[key] = values[0]
     return params
@@ -202,6 +218,11 @@ def web_query_handler():
     input_model = query.inputs()
     json_url = request.url.replace(slug, slug + "/json")
 
+    fields = [
+        SimpleNamespace(name=name, type_=_get_raw_type(info.annotation))
+        for name, info in input_model.model_fields.items()
+    ]
+
     outputs = []
     json_post = ""
     if request.args and not dryrun:
@@ -219,12 +240,12 @@ def web_query_handler():
         groups = group_results(results)
         outputs = convert_result_group_to_output(groups)
 
-        json_post = QueryOutputWrapperModel(__root__=inputs).json(indent=4)
+        json_post = QueryOutputWrapperModel(root=inputs).model_dump_json(indent=4)
 
     return render_template(
         "query.html",
         error=error,
-        fields=input_model.__fields__.values(),
+        fields=fields,
         results=outputs,
         introduction=introduction,
         args=request.args,
@@ -277,13 +298,13 @@ def json_query_handler_get():
 
     try:
         data = query.fetch(inputs, RequestSource.json_get)
-        result = QueryOutputWrapperModel(__root__=data)
+        result = QueryOutputWrapperModel(root=data)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({}), 500
 
-    return Response(result.json(), mimetype="application/json")
+    return Response(result.model_dump_json(), mimetype="application/json")
 
 
 def json_query_handler_post():
@@ -309,10 +330,10 @@ def json_query_handler_post():
 
     try:
         data = query.fetch(inputs, RequestSource.json_post, offset=offset, count=count)
-        result = QueryOutputWrapperModel(__root__=data)
+        result = QueryOutputWrapperModel(root=data)
     except Exception as err:
         sentry_sdk.capture_exception(err)
         print(traceback.format_exc())
         return jsonify({"error": err}), 400
 
-    return Response(result.json(), mimetype="application/json")
+    return Response(result.model_dump_json(), mimetype="application/json")
