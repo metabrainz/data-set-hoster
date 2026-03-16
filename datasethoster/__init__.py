@@ -4,6 +4,8 @@ from typing import TypeVar, Generic, Type
 
 from pydantic import BaseModel
 
+from datasethoster.exceptions import QueryError
+
 QueryInT = TypeVar('QueryInT', bound=BaseModel)
 QueryOutT = TypeVar('QueryOutT', bound=BaseModel)
 
@@ -61,10 +63,12 @@ class Query(Generic[QueryInT, QueryOutT]):
            Given the passed in parameters, the function should carry out more error checking
            on the arguments and then fetch the data needed. This function should
            return a list of dicts with keys named exactly after each of the
-           outputs. This function should use the Werkzeug exceptions like NotFound, BadRequest
-           if anything goes wrong in the process of fetching the data. For the web interface
-           BadRequest, InternalServerError, ImATeapot, ServiceUnavailable, NotFound are caught
-           and the text is correctly displayed as an error on the web page.
+           outputs.
+
+           To report an error to the user, raise a QueryError with a message
+           and optional status_code (defaults to 400). For web views the message
+           is shown on the error page; for JSON views the response is
+           {"error": message, "code": status_code}.
         """
         pass
 

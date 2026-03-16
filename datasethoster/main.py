@@ -1,5 +1,4 @@
 import os
-import traceback
 import typing
 from collections import defaultdict
 from datetime import datetime
@@ -9,15 +8,16 @@ from typing import Any
 from urllib.parse import urlencode
 
 import sentry_sdk
-from flask import Blueprint, Flask, render_template, request, jsonify, redirect, Response
+from flask import Blueprint, Flask, current_app, render_template, request, jsonify, redirect, Response
 from pydantic import BaseModel, RootModel
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
+
 from datasethoster import RequestSource, QueryOutputLine
 from datasethoster.decorators import crossdomain
-from datasethoster.exceptions import RedirectError
+from datasethoster.exceptions import QueryError, RedirectError
 
 
 class QueryOutputWrapperModel(RootModel[list[Any]]):
@@ -232,10 +232,12 @@ def web_query_handler():
             results = query.fetch(inputs, RequestSource.web)
         except RedirectError as red:
             return redirect(red.url)
+        except QueryError as err:
+            error = err.message if err.message else str(err.details)
+            return render_template("error.html", error=error), err.status_code
         except Exception as err:
-            error = traceback.format_exc()
-            sentry_sdk.capture_exception(err)
-            return render_template("error.html", error=error)
+            current_app.logger.error("Unhandled error in web handler: %s", err, exc_info=True)
+            return render_template("error.html", error=str(err))
 
         groups = group_results(results)
         outputs = convert_result_group_to_output(groups)
@@ -299,9 +301,11 @@ def json_query_handler_get():
     try:
         data = query.fetch(inputs, RequestSource.json_get)
         result = QueryOutputWrapperModel(root=data)
+    except QueryError as err:
+        response = {"error": err.message, "code": err.status_code}
+        return jsonify(response), err.status_code
     except Exception as err:
-        sentry_sdk.capture_exception(err)
-        print(traceback.format_exc())
+        current_app.logger.error("Unhandled error in JSON GET handler: %s", err, exc_info=True)
         return jsonify({}), 500
 
     return Response(result.model_dump_json(), mimetype="application/json")
@@ -331,9 +335,11 @@ def json_query_handler_post():
     try:
         data = query.fetch(inputs, RequestSource.json_post, offset=offset, count=count)
         result = QueryOutputWrapperModel(root=data)
+    except QueryError as err:
+        response = {"error": err.message, "code": err.status_code}
+        return jsonify(response), err.status_code
     except Exception as err:
-        sentry_sdk.capture_exception(err)
-        print(traceback.format_exc())
-        return jsonify({"error": err}), 400
+        current_app.logger.error("Unhandled error in JSON POST handler: %s", err, exc_info=True)
+        return jsonify({"error": str(err)}), 400
 
     return Response(result.model_dump_json(), mimetype="application/json")
